@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package com.runicrealms.velagones;
+
+option java_package = "com.runicrealms.velagones.discovery";
+option java_multiple_files = true;
+option java_generic_services = true;
+
+message GameServer {
+  string name = 1;
+  string ip = 2;
+  int32 port = 3;
+}
+
+service DiscoveryService {
+  rpc join(GameServer) returns (google.protobuf.Empty);
+  rpc leave(GameServer) returns (google.protobuf.Empty);
+}

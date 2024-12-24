@@ -1,0 +1,14 @@
+discovery:
+  service:
+    # The name of the Kubernetes service that sits in front of the Velagones gRPC server on Velocity
+    name: velagones-discovery
+    # Namespace of the service
+    namespace: default
+
+agones:
+  # What is the local port to host agones health checks on?
+  local-port: 9357
+  # Should this plugin shut down the paper server when there is no agones to connect to?
+  shutdown-when-missing: true
+  # Should we allocate this instance in agones when we join the velocity proxy?
+  allocate-on-join-velocity: true

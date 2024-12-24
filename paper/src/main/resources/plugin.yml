@@ -1,0 +1,4 @@
+name: Velagones
+version: 0.1.0-SNAPSHOT
+main: com.runicrealms.velagones.paper.VelagonesPaperPlugin
+api-version: 1.20

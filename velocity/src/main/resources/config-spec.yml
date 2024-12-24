@@ -1,0 +1,39 @@
+openapi: 3.0.1
+info:
+  title: Velagones Velocity Plugin Config
+  description: Configuration schema for the Velagones Velocity Plugin.
+  version: 1.0.0
+components:
+  schemas:
+    VelagonesConfig:
+      type: object
+      properties:
+        discovery:
+          type: object
+          properties:
+            port:
+              type: integer
+              description: Port to connect to on the Velagones discovery service
+              default: 9357
+          required:
+            - port
+        agones:
+          type: object
+          properties:
+            fleets:
+              type: array
+              description: List of all Agones fleets that Velagones should manage
+              items:
+                type: string
+              default: []
+            health-check-interval-seconds:
+              description: Every how often should we check for the health of the gameservers in the fleet?
+              type: integer
+              default: 5
+          required:
+            - fleets
+            - health-check-interval-seconds
+      required:
+        - discovery
+        - agones
+paths: {}

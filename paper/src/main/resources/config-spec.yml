@@ -1,0 +1,52 @@
+openapi: 3.0.1
+info:
+  title: Velagones Paper Plugin Config
+  description: Configuration schema for the Velagones Paper Plugin.
+  version: 1.0.0
+components:
+  schemas:
+    VelagonesConfig:
+      type: object
+      properties:
+        discovery:
+          type: object
+          properties:
+            service:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the Kubernetes service that sits in front of the Velagones gRPC server on Velocity
+                  default: velagones-discovery
+                namespace:
+                  type: string
+                  description: Namespace of the service
+                  default: default
+              required:
+                - name
+                - namespace
+          required:
+            - service
+        agones:
+          type: object
+          properties:
+            local-port:
+              type: integer
+              description: The local port to host Agones health checks on.
+              default: 9357
+            shutdown-when-missing:
+              type: boolean
+              description: Should this plugin shut down the Paper server when there is no Agones to connect to?
+              default: true
+            allocate-on-join-velocity:
+              type: boolean
+              description: Should we allocate this instance in agones when we join the velocity proxy?
+              default: true
+          required:
+            - local-port
+            - shutdown-when-missing
+            - allocate-on-join-velocity
+      required:
+        - discovery
+        - agones
+paths: {}

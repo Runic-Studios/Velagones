@@ -1,0 +1,9 @@
+discovery:
+  # Port to connect to on the Velagones discovery service
+  port: 9357
+agones:
+  # List of all Agones fleets that Velagones should manage
+  fleets:
+    - mygame-fleet
+  # Every how often should we check for the health of the gameservers in the fleet?
+  health-check-interval-seconds: 5
