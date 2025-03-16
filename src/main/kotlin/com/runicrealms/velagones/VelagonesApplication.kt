@@ -1,0 +1,8 @@
+package com.runicrealms.velagones
+
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+
+@SpringBootApplication
+@EnableConfigurationProperties(VelagonesConfig::class)
+class VelagonesApplication
