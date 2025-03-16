@@ -19,7 +19,7 @@ Velocity is a proxy which can sit in front of many Paper Minecraft game servers.
 Velagones is installed as a <b>Plugin for the Velocity Proxy</b> that periodically monitors the Kubernetes Cluster it is in installed within to find updates to Game Servers.
 
 Velagones utilizes the Kubernetes API directly to search for objects that have the GameServer CRD type installed by Agones.
-
+It will automatically tell Velocity to register/deregister game servers that it finds in the K8s cluster.
 ### Configuration
 
 Velagones needs to be told which namespace to search for game servers in. This is done through an injected `application.properties` that you put in the `plugins/velagones` folder.
