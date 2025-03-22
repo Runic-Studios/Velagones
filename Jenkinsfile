@@ -35,6 +35,7 @@ pipeline {
                 container('jenkins-agent') {
                     script {
                         sh """
+                        ./gradlew crd2java
                         ./gradlew shadowJar
                         """
                         def jarPath = sh(script: "ls build/libs/velagones-*-all.jar | head -n 1", returnStdout: true).trim()
