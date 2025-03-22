@@ -33,11 +33,13 @@ pipeline {
         stage('Build and Push Artifact') {
             steps {
                 container('jenkins-agent') {
-                    sh """
-                    ./gradlew shadowJar
-                    """
-                    env.JAR_PATH = (new FileNameFinder().getFileNames('build/libs', 'velagones-*-all.jar'))[0]
-                    orasPush('velagones', env.GIT_COMMIT.take(7), env.ARTIFACT_SUFFIX, env.JAR_PATH, "registry.runicrealms.com", "library")
+                    script {
+                        sh """
+                        ./gradlew shadowJar
+                        """
+                        def jarPath = sh(script: "ls build/libs/velagones-*-all.jar | head -n 1", returnStdout: true).trim()
+                        orasPush('velagones', env.GIT_COMMIT.take(7), env.ARTIFACT_SUFFIX, jarPath, "registry.runicrealms.com", "library")
+                    }
                 }
             }
         }
