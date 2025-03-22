@@ -36,7 +36,6 @@ pipeline {
                     sh """
                     ./gradlew shadowJar
                     """
-                    script {
                     env.JAR_PATH = (new FileNameFinder().getFileNames('build/libs', 'velagones-*-all.jar'))[0]
                     orasPush('velagones', env.GIT_COMMIT.take(7), env.ARTIFACT_SUFFIX, env.JAR_PATH, "registry.runicrealms.com", "library")
                 }
