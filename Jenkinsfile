@@ -44,6 +44,13 @@ pipeline {
                 }
             }
         }
+        stage('Update Realm-Velocity Manifest') {
+            steps {
+                container('jenkins-agent') {
+                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', 'velagones', env.GIT_COMMIT.take(7), "registry.runicrealms.com", "build")
+                }
+            }
+        }
     }
     post {
         success {
