@@ -21,8 +21,10 @@ pipeline {
                     echo "Using normalized branch name: ${branchName}"
 
                     if (branchName == 'dev') {
+                        env.RUN_MAIN_DEPLOY = 'false'
                         env.ARTIFACT_SUFFIX = '-dev'
                     } else if (branchName == 'main') {
+                        env.RUN_MAIN_DEPLOY = 'true'
                         env.ARTIFACT_SUFFIX = ''
                     } else {
                         error "Unsupported branch: ${branchName}"
@@ -48,6 +50,16 @@ pipeline {
             steps {
                 container('jenkins-agent') {
                     updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', 'velagones', env.GIT_COMMIT.take(7), "registry.runicrealms.com", "build")
+                }
+            }
+        }
+        stage('Create PR to Promote Realm-Velocity Dev to Main (Prod Only)') {
+            when {
+                expression { return env.RUN_MAIN_DEPLOY == 'true' }
+            }
+            steps {
+                container('jenkins-agent') {
+                    createPR('Velagones', 'Realm-Velocity', 'dev', 'main')
                 }
             }
         }
