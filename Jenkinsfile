@@ -22,10 +22,8 @@ pipeline {
 
                     if (branchName == 'dev') {
                         env.RUN_MAIN_DEPLOY = 'false'
-                        env.ARTIFACT_SUFFIX = '-dev'
                     } else if (branchName == 'main') {
                         env.RUN_MAIN_DEPLOY = 'true'
-                        env.ARTIFACT_SUFFIX = ''
                     } else {
                         error "Unsupported branch: ${branchName}"
                     }
@@ -41,7 +39,7 @@ pipeline {
                         gradle shadowJar
                         """
                         def jarPath = sh(script: "ls build/libs/velagones-*-all.jar | head -n 1", returnStdout: true).trim()
-                        orasPush('velagones', env.GIT_COMMIT.take(7) + env.ARTIFACT_SUFFIX, jarPath, "registry.runicrealms.com", "library")
+                        orasPush('velagones', env.GIT_COMMIT.take(7), jarPath, "registry.runicrealms.com", "library")
                     }
                 }
             }
@@ -49,7 +47,7 @@ pipeline {
         stage('Update Realm-Velocity Manifest') {
             steps {
                 container('jenkins-agent') {
-                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', 'velagones', env.GIT_COMMIT.take(7) + env.ARTIFACT_SUFFIX, "registry.runicrealms.com", "library")
+                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', 'velagones', env.GIT_COMMIT.take(7), "registry.runicrealms.com", "library")
                 }
             }
         }
