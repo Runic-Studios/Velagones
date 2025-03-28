@@ -1,11 +1,13 @@
 package com.runicrealms.velagones
 
-import com.google.common.reflect.TypeToken
+import com.google.gson.reflect.TypeToken
+import com.google.gson.GsonBuilder
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
 import dev.agones.v1.GameServerStatus
 import io.kubernetes.client.openapi.Configuration
+import io.kubernetes.client.openapi.JSON
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
 import io.kubernetes.client.util.Config
 import io.kubernetes.client.util.Watch
@@ -44,6 +46,7 @@ class VelagonesService(
             )
         } else {
             val client = Config.fromCluster()
+            JSON.setGson(JSON.createGson().excludeFieldsWithoutExposeAnnotation().create())
             Configuration.setDefaultApiClient(client)
             val api = CustomObjectsApi(client)
             val watch =
@@ -56,7 +59,7 @@ class VelagonesService(
                             "gameservers",
                         )
                         .buildCall(null),
-                    TypeToken.of(GameServer::class.java).type,
+                    object : TypeToken<Watch.Response<GameServer>>() {}.type
                 )
             watch.forEach { updateServer(it.`object`) }
         }
