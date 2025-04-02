@@ -62,6 +62,9 @@ class VelagonesService(
                             config.gameServerNamespace,
                             "gameservers",
                         )
+                        .allowWatchBookmarks(true)
+                        .watch(true)
+                        .limit(1000)
                         .buildCall(null),
                     object : TypeToken<Watch.Response<GameServer>>() {}.type
                 )
