@@ -61,7 +61,10 @@ class VelagonesService(
                         .buildCall(null),
                     object : TypeToken<Watch.Response<GameServer>>() {}.type
                 )
-            watch.forEach { updateServer(it.`object`) }
+            for (server in watch) {
+                server?.`object` ?: continue
+                updateServer(server.`object`)
+            }
         }
     }
 
