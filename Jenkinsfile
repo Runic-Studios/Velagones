@@ -42,10 +42,10 @@ pipeline {
                 container('jenkins-agent') {
                     script {
                         sh """
-                        gradle crd2java
-                        gradle shadowJar
+                        gradle :common:crd2java
+                        gradle :velocity:shadowJar
                         """
-                        def jarPath = sh(script: "ls build/libs/velagones-*-all.jar | head -n 1", returnStdout: true).trim()
+                        def jarPath = sh(script: "ls velocity/build/libs/velagones-velocity*-all.jar | head -n 1", returnStdout: true).trim()
                         orasPush(env.ARTIFACT_NAME, env.GIT_COMMIT.take(7), jarPath, env.REGISTRY, env.REGISTRY_PROJECT)
                     }
                 }

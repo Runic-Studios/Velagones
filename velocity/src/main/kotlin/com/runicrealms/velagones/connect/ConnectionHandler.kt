@@ -15,6 +15,7 @@ class ConnectionHandler
 constructor(private val proxy: ProxyServer, private val logger: Logger) {
 
     companion object {
+        // TODO make configurable
         const val MAX_PER_SERVER = 20
     }
 

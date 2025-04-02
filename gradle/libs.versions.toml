@@ -1,0 +1,21 @@
+[versions]
+kotlin = "2.1.20"
+slf4j = "2.0.17"
+velocity = "3.4.0-SNAPSHOT"
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version = "0.21.0" }
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+reflections = "org.reflections:reflections:0.10.2"
+guice = "com.google.inject:guice:7.0.0"
+typesafe-config = "com.typesafe:config:1.4.3"
+velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
+kubernetes-client = "io.kubernetes:client-java:21.0.2"
+fabric8-kubernetes-client = "io.fabric8:kubernetes-client:7.1.0"
+fabric8-generator-annotations = "io.fabric8:generator-annotations:7.1.0"
