@@ -33,6 +33,7 @@ class VelagonesService(
                 plugin,
                 Runnable {
                     try {
+                        logger.info("Starting K8s watch for gameserver updates")
                         watch()
                     } catch (exception: Exception) {
                         exception.printStackTrace()
@@ -69,7 +70,10 @@ class VelagonesService(
                     object : TypeToken<Watch.Response<GameServer>>() {}.type
                 )
             for (server in watch) {
-                server?.`object` ?: continue
+                if (server?.`object` == null) {
+                    logger.info("Skipping null server received $server")
+                    continue
+                }
                 updateServer(server.`object`)
             }
         }
