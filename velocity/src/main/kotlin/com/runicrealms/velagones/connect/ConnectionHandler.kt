@@ -31,7 +31,12 @@ constructor(
         if (emptiest.playersConnected.size >= config.maxPlayersPerServer) {
             event.result = ServerPreConnectEvent.ServerResult.denied()
             logger.warn("Denied player ${event.player.uniqueId} entry: all servers full")
+            return
         }
+
+        logger.info(
+            "Intercepted login from player ${event.player.uniqueId}, sending to ${emptiest.serverInfo.name}"
+        )
 
         event.result = ServerPreConnectEvent.ServerResult.allowed(emptiest)
 

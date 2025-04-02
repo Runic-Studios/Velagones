@@ -58,7 +58,7 @@ constructor(
         for (listenerClass in listeners) {
             val listener = injector.getInstance(listenerClass)
             proxy.eventManager.register(this, listener)
-            logger.info("Registered VelagonesListener in velocity ${listenerClass.name}")
+            logger.info("Registered VelagonesListener in velocity ${listener.javaClass.name}")
         }
     }
 }
