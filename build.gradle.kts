@@ -21,7 +21,7 @@ subprojects {
 
     kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
 
-    java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+    java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 }
 
 ktfmt {
