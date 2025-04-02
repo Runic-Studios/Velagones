@@ -19,7 +19,7 @@ import org.slf4j.Logger
 import org.springframework.stereotype.Service
 
 @Service
-@Informer
+@Informer(name = "velagones")
 class VelagonesService(
     private val config: VelagonesConfig,
     private val proxyServer: ProxyServer,
@@ -78,7 +78,7 @@ class VelagonesService(
     }
 
     @io.k8swatcher.annotation.Watch(event = EventType.UPDATE, resource = GameServer::class)
-    fun onServerUpdated(gameServer: GameServer) {
+    fun onServerUpdated(oldGameServer: GameServer, gameServer: GameServer) {
         updateServer(gameServer)
     }
 
