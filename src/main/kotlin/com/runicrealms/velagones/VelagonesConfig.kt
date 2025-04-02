@@ -1,14 +1,20 @@
 package com.runicrealms.velagones
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.annotation.Bean
+import com.google.inject.Inject
+import com.typesafe.config.ConfigFactory
+import com.velocitypowered.api.plugin.annotation.DataDirectory
+import java.io.File
+import java.nio.file.Path
 
-@ConfigurationProperties(prefix = "velagones")
-data class VelagonesConfig(var gameServerNamespace: String? = null) {
+@VelagonesComponent
+class VelagonesConfig @Inject constructor(@DataDirectory val dataDirectory: Path) {
 
-    @Bean fun proxyServer() = VelagonesPlugin.proxyServer
+    private val externalConfig =
+        ConfigFactory.parseFile(File(dataDirectory.toFile(), "application.conf"))
 
-    @Bean fun logger() = VelagonesPlugin.logger
+    // Falls back to jar resources config
+    private val config =
+        externalConfig.withFallback(ConfigFactory.parseResources("application.conf")).resolve()
 
-    @Bean fun plugin() = VelagonesPlugin.plugin
+    val gameServerNamespace: String = config.getString("velagones.game-server-namespace")
 }

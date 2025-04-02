@@ -3,9 +3,6 @@ import com.ncorti.ktfmt.gradle.tasks.KtfmtFormatTask
 
 plugins {
     kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.4.3"
-    id("io.spring.dependency-management") version "1.1.7"
     id("com.ncorti.ktfmt.gradle") version "0.21.0"
     kotlin("kapt") version "2.1.10"
     id("com.gradleup.shadow") version "8.3.6"
@@ -26,22 +23,22 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
     implementation("org.jetbrains.kotlin:kotlin-test:1.9.25")
+
+    implementation("org.reflections:reflections:0.10.2")
+    implementation("com.google.inject:guice:7.0.0")
+
+    implementation("com.typesafe:config:1.4.3")
 
     kapt("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
     compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 
     implementation("io.kubernetes:client-java:21.0.2")
-
     implementation("io.fabric8:kubernetes-client:7.1.0")
     implementation("io.fabric8:generator-annotations:7.1.0")
 }
@@ -67,7 +64,7 @@ tasks.withType<KtfmtCheckTask>().configureEach {
     dependsOn("processResources")
 }
 
-tasks.bootJar { enabled = false }
+// tasks.bootJar { enabled = false }
 
 tasks.jar { manifest { attributes["Spring-Boot-Jar-Type"] = "thin" } }
 
