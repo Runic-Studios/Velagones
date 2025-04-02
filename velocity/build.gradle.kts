@@ -29,6 +29,4 @@ tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.build { dependsOn("shadowJar") }
 
-tasks.shadowJar {
-    archiveBaseName.set("velagones-velocity")
-}
+tasks.shadowJar { archiveBaseName.set("velagones-velocity") }

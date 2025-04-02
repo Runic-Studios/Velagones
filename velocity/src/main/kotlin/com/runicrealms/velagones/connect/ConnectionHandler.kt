@@ -2,6 +2,7 @@ package com.runicrealms.velagones.connect
 
 import com.google.inject.Inject
 import com.runicrealms.velagones.VelagonesComponent
+import com.runicrealms.velagones.VelagonesConfig
 import com.runicrealms.velagones.VelagonesListener
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
@@ -12,12 +13,11 @@ import org.slf4j.Logger
 @VelagonesListener
 class ConnectionHandler
 @Inject
-constructor(private val proxy: ProxyServer, private val logger: Logger) {
-
-    companion object {
-        // TODO make configurable
-        const val MAX_PER_SERVER = 20
-    }
+constructor(
+    private val proxy: ProxyServer,
+    private val logger: Logger,
+    private val config: VelagonesConfig,
+) {
 
     @Subscribe
     fun onServerPreConnect(event: ServerPreConnectEvent) {
@@ -28,7 +28,7 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
             return
         }
 
-        if (emptiest.playersConnected.size >= MAX_PER_SERVER) {
+        if (emptiest.playersConnected.size >= config.maxPlayersPerServer) {
             event.result = ServerPreConnectEvent.ServerResult.denied()
             logger.warn("Denied player ${event.player.uniqueId} entry: all servers full")
         }

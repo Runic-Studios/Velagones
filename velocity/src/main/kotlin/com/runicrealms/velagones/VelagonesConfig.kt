@@ -17,4 +17,6 @@ class VelagonesConfig @Inject constructor(@DataDirectory val dataDirectory: Path
         externalConfig.withFallback(ConfigFactory.parseResources("application.conf")).resolve()
 
     val gameServerNamespace: String = config.getString("velagones.game-server-namespace")
+
+    val maxPlayersPerServer: Int = config.getInt("velagones.max-players-per-server")
 }
