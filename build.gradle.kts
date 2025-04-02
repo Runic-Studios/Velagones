@@ -44,8 +44,6 @@ dependencies {
 
     implementation("io.fabric8:kubernetes-client:7.1.0")
     implementation("io.fabric8:generator-annotations:7.1.0")
-
-    implementation("io.k8swatcher:spring-k8swatcher:1.0.4")
 }
 
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }

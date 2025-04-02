@@ -9,8 +9,6 @@ import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
 import dev.agones.v1.GameServerStatus
-import io.k8swatcher.annotation.EventType
-import io.k8swatcher.annotation.Informer
 import io.kubernetes.client.openapi.Configuration
 import io.kubernetes.client.openapi.JSON
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
@@ -24,7 +22,6 @@ import org.slf4j.Logger
 import org.springframework.stereotype.Service
 
 @Service
-@Informer(name = "velagones")
 class VelagonesService(
     private val config: VelagonesConfig,
     private val proxyServer: ProxyServer,
@@ -104,25 +101,10 @@ class VelagonesService(
         }
     }
 
-    @io.k8swatcher.annotation.Watch(event = EventType.ADD, resource = GameServer::class)
-    fun onServerAdded(gameServer: GameServer) {
-        updateServer(gameServer)
-    }
-
-    @io.k8swatcher.annotation.Watch(event = EventType.UPDATE, resource = GameServer::class)
-    fun onServerUpdated(oldGameServer: GameServer, gameServer: GameServer) {
-        updateServer(gameServer)
-    }
-
-    @io.k8swatcher.annotation.Watch(event = EventType.DELETE, resource = GameServer::class)
-    fun onServerDeleted(gameServer: GameServer) {
-        updateServer(gameServer)
-    }
-
     fun updateServer(gameServer: GameServer) {
         val name = gameServer.metadata.name
         val status = gameServer.status
-        if (status == null) {
+        if (status?.state == null) {
             logger.info("Skipping game with null status $gameServer")
             return
         }
