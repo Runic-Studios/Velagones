@@ -6,6 +6,8 @@ import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
 import dev.agones.v1.GameServerStatus
+import io.k8swatcher.annotation.EventType
+import io.k8swatcher.annotation.Informer
 import io.kubernetes.client.openapi.Configuration
 import io.kubernetes.client.openapi.JSON
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
@@ -17,6 +19,7 @@ import org.slf4j.Logger
 import org.springframework.stereotype.Service
 
 @Service
+@Informer
 class VelagonesService(
     private val config: VelagonesConfig,
     private val proxyServer: ProxyServer,
@@ -45,6 +48,7 @@ class VelagonesService(
                 "No game-server-namespace set for velagones to track, skipping monitoring..."
             )
         } else {
+            logger.info("Watching over game-server-namespace ${config.gameServerNamespace}")
             val client = Config.fromCluster()
             JSON.setGson(JSON.createGson().excludeFieldsWithoutExposeAnnotation().create())
             Configuration.setDefaultApiClient(client)
@@ -66,6 +70,21 @@ class VelagonesService(
                 updateServer(server.`object`)
             }
         }
+    }
+
+    @io.k8swatcher.annotation.Watch(event = EventType.ADD, resource = GameServer::class)
+    fun onServerAdded(gameServer: GameServer) {
+        updateServer(gameServer)
+    }
+
+    @io.k8swatcher.annotation.Watch(event = EventType.UPDATE, resource = GameServer::class)
+    fun onServerUpdated(gameServer: GameServer) {
+        updateServer(gameServer)
+    }
+
+    @io.k8swatcher.annotation.Watch(event = EventType.DELETE, resource = GameServer::class)
+    fun onServerDeleted(gameServer: GameServer) {
+        updateServer(gameServer)
     }
 
     fun updateServer(gameServer: GameServer) {
