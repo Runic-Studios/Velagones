@@ -105,7 +105,7 @@ class VelagonesService(
         val name = gameServer.metadata.name
         val status = gameServer.status
         if (status?.state == null) {
-            logger.info("Skipping game with null status $gameServer")
+            logger.info("Skipping game server with null status $gameServer")
             return
         }
 
