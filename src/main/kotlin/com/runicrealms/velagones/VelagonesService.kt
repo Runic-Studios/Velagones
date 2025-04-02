@@ -1,10 +1,10 @@
 package com.runicrealms.velagones
 
-import com.google.gson.reflect.TypeToken
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
+import com.google.gson.reflect.TypeToken
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
@@ -13,17 +13,15 @@ import io.k8swatcher.annotation.EventType
 import io.k8swatcher.annotation.Informer
 import io.kubernetes.client.openapi.Configuration
 import io.kubernetes.client.openapi.JSON
-import io.kubernetes.client.openapi.JSON.LocalDateTypeAdapter
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
 import io.kubernetes.client.util.Config
 import io.kubernetes.client.util.Watch
+import java.lang.reflect.Type
 import java.net.InetSocketAddress
+import java.time.ZonedDateTime
 import kotlin.jvm.optionals.getOrNull
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
-import java.lang.reflect.Type
-import java.time.LocalDate
-import java.time.ZonedDateTime
 
 @Service
 @Informer(name = "velagones")
@@ -58,15 +56,23 @@ class VelagonesService(
         } else {
             logger.info("Watching over game-server-namespace ${config.gameServerNamespace}")
             val client = Config.fromCluster()
-            JSON.setGson(GsonBuilder()
-                .registerTypeAdapter(ZonedDateTime::class.java, object : JsonDeserializer<ZonedDateTime> {
-                    override fun deserialize(
-                        json: JsonElement, typeOfT: Type, context: JsonDeserializationContext
-                    ): ZonedDateTime {
-                        return ZonedDateTime.parse(json.asString)
-                    }
-                })
-                .create())
+            // Necessary because of java 9+ private changes
+            JSON.setGson(
+                GsonBuilder()
+                    .registerTypeAdapter(
+                        ZonedDateTime::class.java,
+                        object : JsonDeserializer<ZonedDateTime> {
+                            override fun deserialize(
+                                json: JsonElement,
+                                typeOfT: Type,
+                                context: JsonDeserializationContext,
+                            ): ZonedDateTime {
+                                return ZonedDateTime.parse(json.asString)
+                            }
+                        },
+                    )
+                    .create()
+            )
             Configuration.setDefaultApiClient(client)
             val api = CustomObjectsApi(client)
             val watch =
@@ -82,14 +88,18 @@ class VelagonesService(
                         .watch(true)
                         .limit(1000)
                         .buildCall(null),
-                    object : TypeToken<Watch.Response<GameServer>>() {}.type
+                    object : TypeToken<Watch.Response<GameServer>>() {}.type,
                 )
             for (server in watch) {
                 if (server?.`object` == null) {
                     logger.info("Skipping null server received $server")
                     continue
                 }
-                updateServer(server.`object`)
+                try {
+                    updateServer(server.`object`)
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
             }
         }
     }
@@ -112,7 +122,12 @@ class VelagonesService(
     fun updateServer(gameServer: GameServer) {
         val name = gameServer.metadata.name
         val status = gameServer.status
-        logger.info("Discovered game server $name with status $status")
+        if (status == null) {
+            logger.info("Skipping game with null status $gameServer")
+            return
+        }
+
+        logger.info("Discovered game server $name with status ${status.state.name}")
 
         if (
             status.state != GameServerStatus.State.READY &&
