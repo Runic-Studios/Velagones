@@ -2,6 +2,9 @@ package com.runicrealms.velagones
 
 import com.google.gson.reflect.TypeToken
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
@@ -10,6 +13,7 @@ import io.k8swatcher.annotation.EventType
 import io.k8swatcher.annotation.Informer
 import io.kubernetes.client.openapi.Configuration
 import io.kubernetes.client.openapi.JSON
+import io.kubernetes.client.openapi.JSON.LocalDateTypeAdapter
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
 import io.kubernetes.client.util.Config
 import io.kubernetes.client.util.Watch
@@ -17,6 +21,9 @@ import java.net.InetSocketAddress
 import kotlin.jvm.optionals.getOrNull
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
+import java.lang.reflect.Type
+import java.time.LocalDate
+import java.time.ZonedDateTime
 
 @Service
 @Informer(name = "velagones")
@@ -51,7 +58,15 @@ class VelagonesService(
         } else {
             logger.info("Watching over game-server-namespace ${config.gameServerNamespace}")
             val client = Config.fromCluster()
-            JSON.setGson(GsonBuilder().create())
+            JSON.setGson(GsonBuilder()
+                .registerTypeAdapter(ZonedDateTime::class.java, object : JsonDeserializer<ZonedDateTime> {
+                    override fun deserialize(
+                        json: JsonElement, typeOfT: Type, context: JsonDeserializationContext
+                    ): ZonedDateTime {
+                        return ZonedDateTime.parse(json.asString)
+                    }
+                })
+                .create())
             Configuration.setDefaultApiClient(client)
             val api = CustomObjectsApi(client)
             val watch =
