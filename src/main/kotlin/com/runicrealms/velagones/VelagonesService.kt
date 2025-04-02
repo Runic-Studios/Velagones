@@ -51,7 +51,7 @@ class VelagonesService(
         } else {
             logger.info("Watching over game-server-namespace ${config.gameServerNamespace}")
             val client = Config.fromCluster()
-            JSON.setGson(JSON.createGson().excludeFieldsWithoutExposeAnnotation().create())
+            JSON.setGson(GsonBuilder().create())
             Configuration.setDefaultApiClient(client)
             val api = CustomObjectsApi(client)
             val watch =
