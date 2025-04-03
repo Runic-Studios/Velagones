@@ -58,13 +58,11 @@ constructor(
             .buildTask(
                 plugin,
                 Runnable {
-                    while (true) {
-                        try {
-                            fabricWatch()
-                        } catch (exception: Exception) {
-                            exception.printStackTrace()
-                        }
-                    }
+                try {
+                    fabricWatch()
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
                 },
             )
             .schedule()
@@ -142,15 +140,11 @@ constructor(
     private fun updateServer(gameServer: GameServer) {
         val name = gameServer.metadata.name
         val status = gameServer.status
-        if (status?.state == null) {
-            logger.info("Skipping game server with null status $gameServer")
-            return
-        }
-
-        logger.info("Discovered game server $name with status ${status.state.name}")
+        if (status?.state == null) return
 
         if (
             status.state != GameServerStatus.State.READY &&
+                status.state != GameServerStatus.State.UNHEALTHY &&
                 status.state != GameServerStatus.State.SHUTDOWN
         )
             return
@@ -158,23 +152,25 @@ constructor(
         val ports = gameServer.spec.ports
         val gamePort = ports.firstOrNull { it.name == "game" }
 
-        if (gamePort == null) {
-            logger.info("Game server $name has no valid game port, skipping")
-            return
-        }
+        if (gamePort == null) return
 
-        if (status.state == GameServerStatus.State.SHUTDOWN) {
+        if (status.state == GameServerStatus.State.SHUTDOWN
+            || status.state == GameServerStatus.State.UNHEALTHY) {
             val targetServer = proxy.getServer(name).getOrNull() ?: return
             logger.info("Removing game server $name since it is shutting down")
             proxy.unregisterServer(targetServer.serverInfo)
             return
+        } else if (status.state == GameServerStatus.State.READY) {
+            if (!proxy.getServer(name).isEmpty) return
+
+            val port = gamePort.hostPort.toInt()
+            val socketAddress = InetSocketAddress(status.address, port)
+            val newServer = ServerInfo(name, socketAddress)
+
+            logger.info("Registering new game server $name on address ${status.address}:$port")
+            proxy.registerServer(newServer)
         }
 
-        val port = gamePort.hostPort.toInt()
-        val socketAddress = InetSocketAddress(status.address, port)
-        val newServer = ServerInfo(name, socketAddress)
 
-        logger.info("Registering new game server $name on address ${status.address}:$port")
-        proxy.registerServer(newServer)
     }
 }
