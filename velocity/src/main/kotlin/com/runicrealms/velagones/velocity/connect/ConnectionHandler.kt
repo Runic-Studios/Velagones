@@ -1,9 +1,9 @@
-package com.runicrealms.velagones.connect
+package com.runicrealms.velagones.velocity.connect
 
 import com.google.inject.Inject
-import com.runicrealms.velagones.VelagonesComponent
-import com.runicrealms.velagones.VelagonesConfig
-import com.runicrealms.velagones.VelagonesListener
+import com.runicrealms.velagones.velocity.VelagonesComponent
+import com.runicrealms.velagones.velocity.VelagonesConfig
+import com.runicrealms.velagones.velocity.VelagonesListener
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.proxy.ProxyServer

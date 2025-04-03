@@ -1,4 +1,4 @@
-package com.runicrealms.velagones
+package com.runicrealms.velagones.velocity
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

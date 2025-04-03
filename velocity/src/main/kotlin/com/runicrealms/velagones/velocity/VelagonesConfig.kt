@@ -1,4 +1,4 @@
-package com.runicrealms.velagones
+package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
 import com.typesafe.config.ConfigFactory

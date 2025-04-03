@@ -1,4 +1,4 @@
-package com.runicrealms.velagones.agones
+package com.runicrealms.velagones.velocity.agones
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
@@ -6,9 +6,9 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import com.runicrealms.velagones.VelagonesComponent
-import com.runicrealms.velagones.VelagonesConfig
-import com.runicrealms.velagones.VelagonesPlugin
+import com.runicrealms.velagones.velocity.VelagonesComponent
+import com.runicrealms.velagones.velocity.VelagonesConfig
+import com.runicrealms.velagones.velocity.VelagonesPlugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
