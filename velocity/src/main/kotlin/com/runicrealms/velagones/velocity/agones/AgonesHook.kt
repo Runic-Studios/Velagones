@@ -13,6 +13,10 @@ import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
 import dev.agones.v1.GameServerStatus
+import io.fabric8.kubernetes.client.KubernetesClientBuilder
+import io.fabric8.kubernetes.client.KubernetesClientException
+import io.fabric8.kubernetes.client.Watcher
+import io.fabric8.kubernetes.client.WatcherException
 import io.kubernetes.client.openapi.Configuration
 import io.kubernetes.client.openapi.JSON
 import io.kubernetes.client.openapi.apis.CustomObjectsApi
@@ -50,6 +54,38 @@ constructor(
                 },
             )
             .schedule()
+        proxy.scheduler
+            .buildTask(
+                plugin,
+                Runnable {
+                    while (true) {
+                        try {
+                            fabricWatch()
+                        } catch (exception: Exception) {
+                            exception.printStackTrace()
+                        }
+                    }
+                },
+            )
+            .schedule()
+    }
+
+    private fun fabricWatch() {
+        logger.info("Starting FABRIC K8s watch for gameserver updates")
+        val client = KubernetesClientBuilder().build()
+        client
+            .resources(GameServer::class.java)
+            .inNamespace(config.gameServerNamespace)
+            .watch(object : Watcher<GameServer> {
+                override fun eventReceived(action: Watcher.Action, resource: GameServer) {
+                    logger.info("Event: $action for GameServer ${resource.metadata.name}")
+                    logger.info("Status: ${resource.status?.state}")
+                }
+                override fun onClose(cause: WatcherException?) {
+                    logger.info("Watch closed: ${cause?.message}")
+                    fabricWatch()
+                }
+            })
     }
 
     private fun watch() {
