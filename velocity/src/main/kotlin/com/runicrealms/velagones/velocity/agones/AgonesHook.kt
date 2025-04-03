@@ -39,21 +39,21 @@ constructor(
 ) {
 
     init {
-        proxy.scheduler
-            .buildTask(
-                plugin,
-                Runnable {
-                    while (true) {
-                        try {
-                            logger.info("Starting K8s watch for gameserver updates")
-                            watch()
-                        } catch (exception: Exception) {
-                            exception.printStackTrace()
-                        }
-                    }
-                },
-            )
-            .schedule()
+//        proxy.scheduler
+//            .buildTask(
+//                plugin,
+//                Runnable {
+//                    while (true) {
+//                        try {
+//                            logger.info("Starting K8s watch for gameserver updates")
+//                            watch()
+//                        } catch (exception: Exception) {
+//                            exception.printStackTrace()
+//                        }
+//                    }
+//                },
+//            )
+//            .schedule()
         proxy.scheduler
             .buildTask(
                 plugin,
@@ -71,15 +71,14 @@ constructor(
     }
 
     private fun fabricWatch() {
-        logger.info("Starting FABRIC K8s watch for gameserver updates")
+        logger.info("Starting K8s watch for gameserver updates")
         val client = KubernetesClientBuilder().build()
         client
             .resources(GameServer::class.java)
             .inNamespace(config.gameServerNamespace)
             .watch(object : Watcher<GameServer> {
-                override fun eventReceived(action: Watcher.Action, resource: GameServer) {
-                    logger.info("Event: $action for GameServer ${resource.metadata.name}")
-                    logger.info("Status: ${resource.status?.state}")
+                override fun eventReceived(action: Watcher.Action, resource: GameServer?) {
+                    updateServer(resource ?: return)
                 }
                 override fun onClose(cause: WatcherException?) {
                     logger.info("Watch closed: ${cause?.message}")
