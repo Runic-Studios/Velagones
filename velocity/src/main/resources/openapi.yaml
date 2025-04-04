@@ -1,0 +1,66 @@
+openapi: 3.0.0
+info:
+  title: Agones Fleet Autoscaler Endpoint
+  version: "1.0"
+paths:
+  /autoscale:
+    post:
+      operationId: autoscale
+      summary: Autoscale target for Agones
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutoscaleRequestModel'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutoscaleResponseModel'
+components:
+  schemas:
+    AutoscaleRequestModel:
+      type: object
+      required: [ request ]
+      properties:
+        request:
+          type: object
+          required: [ uid, name, namespace, status ]
+          properties:
+            uid:
+              type: string
+            name:
+              type: string
+            namespace:
+              type: string
+            status:
+              type: object
+              required: [ replicas, allocatedReplicas, readyReplicas, reservedReplicas ]
+              properties:
+                replicas:
+                  type: integer
+                readyReplicas:
+                  type: integer
+                reservedReplicas:
+                  type: integer
+                allocatedReplicas:
+                  type: integer
+        response:
+          type: object
+    AutoscaleResponseModel:
+      type: object
+      required: [ response ]
+      properties:
+        response:
+          type: object
+          required: [ scale, replicas, uid ]
+          properties:
+            scale:
+              type: boolean
+            replicas:
+              type: integer
+            uid:
+              type: string

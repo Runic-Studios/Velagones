@@ -21,7 +21,7 @@ subprojects {
 
     kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict") } }
 
-    java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
+    java { toolchain.languageVersion.set(JavaLanguageVersion.of(21)) }
 }
 
 ktfmt {
@@ -32,9 +32,11 @@ ktfmt {
 tasks.withType<KtfmtFormatTask>().configureEach {
     source = project.fileTree(rootDir)
     include("**/*.kt")
+    exclude("**/generated/**")
 }
 
 tasks.withType<KtfmtCheckTask>().configureEach {
     source = project.fileTree(rootDir)
     include("**/*.kt")
+    exclude("**/generated/**")
 }
