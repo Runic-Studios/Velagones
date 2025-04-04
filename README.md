@@ -59,6 +59,8 @@ Velagones needs to run as both a <b>plugin on the Velocity proxy</b>, and as a <
     - Deactivated servers are not considered in the autoscaling equation.
 - Upon receiving a deactivation notice, Velagones on Paper will wait until all players have left, then mark itself as SHUTDOWN in Agones, and stop the Paper process
 
+![velagones](https://github.com/user-attachments/assets/7c13e66f-c07b-47e9-9d2e-a86280fe99da)
+
 ## Configuration
 
 ### Velagones on Velocity
