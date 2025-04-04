@@ -64,6 +64,7 @@ Velagones needs to run as both a <b>plugin on the Velocity proxy</b>, and as a <
 ## Configuration
 
 ### Velagones on Velocity
+`plugins/Velagones/application.conf`:
 ```conf
 agones {
     gameServerNamespace = "default"
@@ -98,6 +99,7 @@ scaling {
     - This is to prevent constant scaling if we are on the boundary. Larger hysteresis values (up until 1.5) require larger dips in traffic before we scale down, and smaller values are more eager to scale down.
 
 ### Velagones on Paper
+`plugins/Velagones/application.conf`:
 ```conf
 service {
     hostPort = 50051
