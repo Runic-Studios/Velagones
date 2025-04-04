@@ -1,3 +1,4 @@
+
 # Velagones
 
 This project is intended to be a bridge between the Agones project for Kubernetes, and the PaperMC Velocity project which is a proxy for Minecraft servers.
@@ -10,32 +11,156 @@ Agones is a Kubernetes extension that creates CRDs for GameServers, and Fleets (
 
 - Dynamic port assignment: Agones assigns each game server a port between 7000-7999 on the worker node for it to run off of, then allows for discovery of this port through Agones APIs
 - Autoscaling and availability: Agones allows for custom tuning of autoscaling based on the number of game servers in-use, or number of players online. We can also configure idle servers to wait until their are allocated for extra availability.
-- Game server allocation: Using the Agones Allocator Service, we can request fresh game servers either through a matchmaker or through custom solutions. 
+- Game server allocation: Using the Agones Allocator Service, we can request fresh game servers either through a matchmaker or through custom solutions.
 
-Velocity is a proxy which can sit in front of many Paper Minecraft game servers. When deploying Velocity in an Agones setup to manage our Minecraft game servers, we run into an issue where Velocity is not automatically aware of new game servers that Kubernetes/Agones spin up. This project intends to bridge this gap, among other things.
+Velocity is a proxy which can sit in front of many Paper Minecraft game servers. When deploying Velocity in an Agones setup to manage our Minecraft game servers, we run into an issue where <b>Velocity is not automatically aware of new game servers that Kubernetes/Agones spin up</b>. This project intends to bridge this gap, among other things.
 
-## Solution
+<b>Note</b>: Velagones is intended to work for Minecraft proxy setups where players are not required to be on any one server in order to play their game, and all servers are treated as equal replicas. This is great for games where reason for using Agones is to maintain equivalent replicas, but Velagones may not be a good match for those aiming to have match-making where players are guided to a specific server when they connect (such as with mini-games).
 
-Velagones is installed as a <b>Plugin for the Velocity Proxy</b> that periodically monitors the Kubernetes Cluster it is in installed within to find updates to Game Servers.
 
-Velagones utilizes the Kubernetes API directly to search for objects that have the GameServer CRD type installed by Agones.
-It will automatically tell Velocity to register/deregister game servers that it finds in the K8s cluster.
-### Configuration
+## Features
 
-Velagones needs to be told which namespace to search for game servers in. This is done through an injected `application.properties` that you put in the `plugins/velagones` folder.
+Velagones does a few things:
+- Makes every backend server Agones-aware by enabling health checks, and marking it as ready in the Agones SDK.
+- Constantly monitor the Kubernetes namespace it is in for GameServers that Agones spins up. It sends these servers a "Discovery Signal," and then adds them to the Velocity proxy.
+- Monitor the player counts and attempt to auto-scale the number of servers up or down.
+- Guides connecting players to an active backend server with the lowest player count.
+    - This relies on our assumption that all backend servers are equal replicas and it does not matter which one a player connects to.
+    - A future setting may allow "Packed" connection handling instead.
 
-The only property (so far) in `application.properties` should be:
+## Implementation
+Velagones needs to run as both a <b>plugin on the Velocity proxy</b>, and as a <b>plugin on each backend PaperMC server</b>.
+
+<b>Velagones on Velocity</b> is responsible for
+- Routing player connections
+- Computing auto-scaling logic
+- Maintaining an Agones-aware registry of all connected backend servers, and speaking to them over gRPC
+
+<b>Velagones on Paper</b> will be in charge of
+- Starting a gRPC server for Velagones on Velocity to connect to
+- Updating the GameServer's status in Agones SDK
+    - Notice that while Agones offers [many GameServer state options](https://agones.dev/site/docs/reference/gameserver/#gameserver-state-diagram), we will only be using three:
+        - SCHEDULED: GameServer pod has started, but Paper hasn't finished starting
+        - READY: Velagones has marked the GameServer as ready to accept connections now that PaperMC has started
+        - SHUTDOWN: Velagones on Paper has received a signal from Velagones on Velocity that it should shut itself down (as a result of autoscaling)
+    - In particular, we are never using the ALLOCATED state.
+### Discovery
+- When a new GameServer instance is started by Agones (indirectly caused by Velagones autoscaling), Velagones on Paper marks it as READY in Agones
+- Velagones on Velocity notices this state change in the cluster, and sends a "Discovery Message" to Velagones on that Paper server using gRPC.
+- Once discovery has been approved, Velagones on Velocity adds the new server to the Velocity proxy and its internal registry.
+### Autoscaling
+- Velagones on Velocity evaluates the need for scaling up/down each time a player joins/leaves the network
+- Details on the configuration of autoscaling are below
+- In the even of a scale up, Velagones on Velocity informs Agones via webhook of an increased need of replicas
+    - This will eventually trigger the discovery process
+### Deactivation
+- In the even of a scale down, Velagones on Velocity informs the paper server that it is <b>being deactivated</b> via gRPC.
+    - A <b>deactivated server</b> is one that cannot have new player connections, but can maintain old ones for a certain period until it is shutdown.
+    - Deactivated servers are not considered in the autoscaling equation.
+- Upon receiving a deactivation notice, Velagones on Paper will wait until all players have left, then mark itself as SHUTDOWN in Agones, and stop the Paper process
+
+## Configuration
+
+### Velagones on Velocity
+```conf
+agones {
+    gameServerNamespace = "default"
+    autoscaleHostPort = 7070
+}
+scaling {
+    serverCapacity = 20
+    capacityFactor = 1.5
+    minServers = 1
+    up {
+        minPlayersBefore = 10
+        minSecondsBefore = 120
+    }
+    down {
+        minSecondsBefore = 300
+        hysteresis = 1.2
+    }
+}
 ```
-velagones.game-server-namespace=MY_NAMESPACE
+- `agones.gameServerNamespace`: Which namespace to scan for GameServers in the K8s cluster.
+    - Future plans to add individual fleet scanning.
+- `agones.autoscaleHostPort`: Which port to host the auto-scaler webhook. Important for later configuration of Agones.
+- `scaling.serverCapacity`: Maximum number of players each server can hold.
+- `scaling.capacityFactor`: Goal for how many players we should be able to hold among all active servers.
+    - If server capacity is 20, capacity factor is 1.5, and we have 30 players connected, we would aim to support 45, and thus want to have 3 servers open.
+- `scaling.minServers`: Minimum number of active replicas to have at once (no including deactivated replicas).
+- `scaling.up.minPlayersBefore`: Minimum number of players we must have across the network before triggering an scale up.
+- `scaling.up.minSecondsBefore`: Minimum duration between scale up attempts.
+- `scaling.down.minSecondsBefore`: Minimum duration between scale down attempts.
+- `scaling.down.hysteresis`: Amount of "buffer capacity" we should need to keep before scaling down.
+    - If server capacity is 30, capacity factor is 1.5, hysteresis is 1.2, and we have players 19 connected but 2 servers open, we <i>cannot</i> scale down until our player count decreases below `ceil(30 / 1.5 / 1.2) = 17`
+    - This is to prevent constant scaling if we are on the boundary. Larger hysteresis values (up until 1.5) require larger dips in traffic before we scale down, and smaller values are more eager to scale down.
+
+### Velagones on Paper
+```conf
+service {
+    hostPort = 50051
+}
 ```
+- `service.hostPort`: Which port to host our gRPC server on for communication with Velagones on Velocity. Important for later configuration of Agones.
 
-Note that other native spring boot application properties can be injected through this file as well.
+### Agones/Kubernetes Namespace
+- You should have Agones installed in a separate namespace from your fleets and Velocity proxy.
+- The Velocity proxy is expected to be installed in a separate deployment and service.
+- At least one fleet should be installed in the namespace with the Velocity proxy.
 
-## Implementation Details
-
-Velagones uses:
-- Spring Boot for autowiring configuration, and as the runtime wrapper
-- Fabric8's Kubernetes Java generator to create java POJOs for the CRDs created by Agones
-- The Kubernets Java API to access the cluster
-
-While running on top of Velocity.
+Sample fleet:
+```yaml
+apiVersion: agones.dev/v1
+kind: Fleet
+metadata:
+  name: my-fleet
+spec:
+  replicas: 1
+  template:
+    spec:
+      ports:
+        - name: game           # MUST be named game
+          containerPort: 25565
+        - name: grpc           # MUST be named grpc
+          containerPort: 50051 # Should match configuration in Velagones on Paper
+      template:
+        spec:
+          containers:
+            - name: paper-gameserver
+              image: my-image:latest
+```
+Velocity should be deployment using its own `Deployment`, which in this example, should have app label `velocity`.
+Sample velocity service:
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: velocity-service
+spec:
+  selector:
+    app: velocity
+  ports:
+    - protocol: TCP
+      port: 25565
+      targetPort: 25565
+    - protocol: HTTP
+      port: 7070
+      targetPort: 7070  # Should match configuration in Velagones on Velocity
+  type: ClusterIP
+```
+Fleet autoscaler (REQUIRED!)
+```yaml
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler
+spec:
+  fleetName: my-fleet  # Should match your fleet name
+  policy:
+    type: Webhook
+    webhook:
+      service:
+        name: velocity-service
+        path: /autoscale
+        port: 7070  # Should match port in velocity service
+```
