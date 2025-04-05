@@ -1,4 +1,5 @@
 
+
 # Velagones
 
 This project is intended to be a bridge between the Agones project for Kubernetes, and the PaperMC Velocity project which is a proxy for Minecraft servers.
@@ -7,24 +8,23 @@ Velagones is a project created by Runic Studios for Runic Realms, but is configu
 
 ## Background
 
-Agones is a Kubernetes extension that creates CRDs for GameServers, and Fleets (of game servers). Agones is useful when creating games for many reasons, but some of the popular ones include:
-
+Agones is a Kubernetes extension that creates CRDs for GameServers, and Fleets (of game servers). 
+It has many features, but the only ones relevant to us are:
+- Kubernetes-managed lifecycle of our GameServers
 - Dynamic port assignment: Agones assigns each game server a port between 7000-7999 on the worker node for it to run off of, then allows for discovery of this port through Agones APIs
-- Autoscaling and availability: Agones allows for custom tuning of autoscaling based on the number of game servers in-use, or number of players online. We can also configure idle servers to wait until their are allocated for extra availability.
-- Game server allocation: Using the Agones Allocator Service, we can request fresh game servers either through a matchmaker or through custom solutions.
+- Autoscaling and availability: We can custom tune auto-scaling based on the number of game servers in-use, or number of players online.
 
-Velocity is a proxy which can sit in front of many Paper Minecraft game servers. When deploying Velocity in an Agones setup to manage our Minecraft game servers, we run into an issue where <b>Velocity is not automatically aware of new game servers that Kubernetes/Agones spin up</b>. This project intends to bridge this gap, among other things.
+Velocity is a proxy which can sit in front of many PaperMC game servers. When deploying Velocity in an Agones setup, <b>Velocity is not automatically aware of new game servers that Kubernetes/Agones spin up</b>, and would have no way to route players to them. This project intends to bridge this gap, among other things.
 
-<b>Note</b>: Velagones is intended to work for Minecraft proxy setups where players are not required to be on any one server in order to play their game, and all servers are treated as equal replicas. This is great for games where reason for using Agones is to maintain equivalent replicas, but Velagones may not be a good match for those aiming to have match-making where players are guided to a specific server when they connect (such as with mini-games).
-
+<b>Note</b>: Velagones is intended to work for Minecraft proxy setups where players are not required to be on any one server in order to play their game, and all servers are treated as equal replicas. This is great for games where the reason for using Agones is to maintain equivalent replicas, but Velagones may not be a good match for those aiming to have match-making where players are guided to a specific server when they connect (such as with mini-games).
 
 ## Features
 
 Velagones does a few things:
-- Makes every backend server Agones-aware by enabling health checks, and marking it as ready in the Agones SDK.
-- Constantly monitor the Kubernetes namespace it is in for GameServers that Agones spins up. It sends these servers a "Discovery Signal," and then adds them to the Velocity proxy.
-- Monitor the player counts and attempt to auto-scale the number of servers up or down.
-- Guides connecting players to an active backend server with the lowest player count.
+- Makes every backend Paper server Agones-aware by enabling health checks, and marking it as ready in the Agones SDK.
+- Constantly monitors the K8s namespace it is in for GameServers that Agones spins up. It sends these servers a "Discovery Signal," and then adds them to the Velocity proxy so players can connect to them.
+- Monitors the player counts network-wide and attempts to auto-scale the fleet of GameServers up or down.
+- Routes connecting players to an active backend server with the lowest player count.
     - This relies on our assumption that all backend servers are equal replicas and it does not matter which one a player connects to.
     - A future setting may allow "Packed" connection handling instead.
 
@@ -34,25 +34,31 @@ Velagones needs to run as both a <b>plugin on the Velocity proxy</b>, and as a <
 <b>Velagones on Velocity</b> is responsible for
 - Routing player connections
 - Computing auto-scaling logic
-- Maintaining an Agones-aware registry of all connected backend servers, and speaking to them over gRPC
+- Maintaining an Agones-aware registry of all connected backend servers, and messaging them over gRPC
 
 <b>Velagones on Paper</b> will be in charge of
 - Starting a gRPC server for Velagones on Velocity to connect to
 - Updating the GameServer's status in Agones SDK
-    - Notice that while Agones offers [many GameServer state options](https://agones.dev/site/docs/reference/gameserver/#gameserver-state-diagram), we will only be using three:
-        - SCHEDULED: GameServer pod has started, but Paper hasn't finished starting
-        - READY: Velagones has marked the GameServer as ready to accept connections now that PaperMC has started
-        - SHUTDOWN: Velagones on Paper has received a signal from Velagones on Velocity that it should shut itself down (as a result of autoscaling)
-    - In particular, we are never using the ALLOCATED state.
+  - This is necessary for Agones to be able to effectively manage the lifecycle of our GameServers in Kubernetes
+  - Notice that while Agones offers [many GameServer state options](https://agones.dev/site/docs/reference/gameserver/#gameserver-state-diagram), we will only be using three:
+      - SCHEDULED: GameServer pod has started, but Paper hasn't finished starting
+      - READY: Velagones has marked the GameServer as ready to accept connections now that PaperMC has started
+      - SHUTDOWN: Velagones on Paper has received a signal from Velagones on Velocity that it should shut itself down (as a result of autoscaling)
+  - In particular, we are never using the ALLOCATED state.
+
+Here is a diagram representing the communication we are describing:
+
+![velagones](https://github.com/user-attachments/assets/7c13e66f-c07b-47e9-9d2e-a86280fe99da)
+
 ### Discovery
-- When a new GameServer instance is started by Agones (indirectly caused by Velagones autoscaling), Velagones on Paper marks it as READY in Agones
+- When a new GameServer instance is started by Agones (which would originally be caused by Velagones autoscaling), Velagones on Paper marks it as READY in Agones.
 - Velagones on Velocity notices this state change in the cluster, and sends a "Discovery Message" to Velagones on that Paper server using gRPC.
 - Once discovery has been approved, Velagones on Velocity adds the new server to the Velocity proxy and its internal registry.
 ### Autoscaling
-- Velagones on Velocity evaluates the need for scaling up/down each time a player joins/leaves the network
-- Details on the configuration of autoscaling are below
-- In the even of a scale up, Velagones on Velocity informs Agones via webhook of an increased need of replicas
-    - This will eventually trigger the discovery process
+- Velagones on Velocity evaluates the need to scale up or down each time a player joins/leaves the network.
+  - Details on the configuration of autoscaling are below.
+- In the even of a scale up, Velagones on Velocity informs Agones via webhook of an increased need of replicas.
+    - This will eventually trigger the discovery process.
 ### Deactivation
 - In the even of a scale down, Velagones on Velocity informs the paper server that it is <b>being deactivated</b> via gRPC.
     - A <b>deactivated server</b> is one that cannot have new player connections, but can maintain old ones for a certain period until it is shutdown.
@@ -62,6 +68,7 @@ Velagones needs to run as both a <b>plugin on the Velocity proxy</b>, and as a <
 ## Configuration
 
 ### Velagones on Velocity
+`plugins/Velagones/application.conf`:
 ```conf
 agones {
     gameServerNamespace = "default"
@@ -96,6 +103,7 @@ scaling {
     - This is to prevent constant scaling if we are on the boundary. Larger hysteresis values (up until 1.5) require larger dips in traffic before we scale down, and smaller values are more eager to scale down.
 
 ### Velagones on Paper
+`plugins/Velagones/application.conf`:
 ```conf
 service {
     hostPort = 50051
