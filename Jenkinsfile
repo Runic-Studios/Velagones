@@ -8,7 +8,8 @@ pipeline {
     }
 
     environment {
-        ARTIFACT_NAME = 'velagones'
+        ARTIFACT_VELOCITY_NAME = 'velagones-velocity'
+        ARTIFACT_PAPER_NAME = 'velagones-paper'
         PROJECT_NAME = 'Velagones'
         REGISTRY = 'registry.runicrealms.com'
         REGISTRY_PROJECT = 'library'
@@ -37,33 +38,35 @@ pipeline {
                 }
             }
         }
-        stage('Build and Push Artifact') {
+        stage('Build and Push Artifacts') {
             steps {
                 container('jenkins-agent') {
                     script {
                         sh """
                         gradle :velocity:shadowJar :paper:shadowJar --no-daemon
                         """
-                        orasPush(env.ARTIFACT_NAME + "-velocity", env.GIT_COMMIT.take(7), "velocity/build/libs/velagones-velocity-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
-                        orasPush(env.ARTIFACT_NAME + "-paper", env.GIT_COMMIT.take(7), "paper/build/libs/velagones-paper-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
+                        orasPush(env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), "velocity/build/libs/velagones-velocity-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
+                        orasPush(env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), "paper/build/libs/velagones-paper-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
                     }
                 }
             }
         }
-        stage('Update Realm-Velocity Manifest') {
+        stage('Update Realm-Velocity and Realm-Paper Manifests') {
             steps {
                 container('jenkins-agent') {
-                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
+                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
+                    updateManifest('dev', 'Realm-Paper', 'plugin-manifest.yaml', env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
                 }
             }
         }
-        stage('Create PR to Promote Realm-Velocity Dev to Main (Prod Only)') {
+        stage('Create PRs to Promote Realm-Velocity and Realm-Paper Dev to Main (Prod Only)') {
             when {
                 expression { return env.RUN_MAIN_DEPLOY == 'true' }
             }
             steps {
                 container('jenkins-agent') {
                     createPR('Velagones', 'Realm-Velocity', 'dev', 'main')
+                    createPR('Velagones', 'Realm-Paper', 'dev', 'main')
                 }
             }
         }
