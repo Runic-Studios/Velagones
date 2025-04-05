@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 
 @VelagonesComponent
-class VelagonesConfig @Inject constructor(private val plugin: VelagonesPlugin) {
+class VelagonesConfig @Inject constructor(plugin: VelagonesPlugin) {
 
     private val externalConfig =
         ConfigFactory.parseFile(File(plugin.dataFolder, "application.conf"))

@@ -43,4 +43,7 @@ tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.build { dependsOn("shadowJar") }
 
-tasks.shadowJar { archiveBaseName.set("velagones-paper") }
+tasks.shadowJar {
+    archiveBaseName.set("velagones-paper")
+    mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
+}
