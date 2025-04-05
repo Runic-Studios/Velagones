@@ -43,7 +43,7 @@ pipeline {
                 container('jenkins-agent') {
                     script {
                         sh """
-                        gradle :velocity:shadowJar :paper:shadowJar --no-daemon
+                        ./gradlew :velocity:shadowJar :paper:shadowJar --no-daemon
                         """
                         orasPush(env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), "velocity/build/libs/velagones-velocity-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
                         orasPush(env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), "paper/build/libs/velagones-paper-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
