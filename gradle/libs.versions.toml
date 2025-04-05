@@ -13,7 +13,7 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 ktfmt = "com.ncorti.ktfmt.gradle:0.21.0"
 shadow = "com.gradleup.shadow:8.3.6"
-protobuf = "com.google.protobuf:0.9.4"
+protobuf = "com.google.protobuf:0.9.5"
 fabric8-gen = "io.fabric8.java-generator:7.1.0"
 openapi = "org.openapi.generator:7.9.0"
 

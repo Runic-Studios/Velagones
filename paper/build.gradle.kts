@@ -6,6 +6,7 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://nexus.runicrealms.com/repository/maven-releases/")
 }
 
 dependencies {
@@ -28,7 +29,8 @@ dependencies {
     implementation(libs.fabric8.generator.annotations)
 
     // Agones client SDK
-    implementation(libs.agones4j)
+//    implementation(libs.agones4j)
+    implementation("com.runicrealms.agonessdk:agones4j:1.0")
 
     // gRPC + Protobuf
     implementation(libs.protobuf.kotlin)
