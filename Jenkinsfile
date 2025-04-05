@@ -54,8 +54,8 @@ pipeline {
         stage('Update Realm-Velocity and Realm-Paper Manifests') {
             steps {
                 container('jenkins-agent') {
-                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
-                    updateManifest('dev', 'Realm-Paper', 'plugin-manifest.yaml', env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
+                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
+                    updateManifest('dev', 'Realm-Paper', 'plugin-manifest.yaml', env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
                 }
             }
         }
