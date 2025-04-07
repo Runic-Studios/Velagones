@@ -178,10 +178,12 @@ spec:
   selector:
     app: velocity
   ports:
-    - protocol: TCP
+    - name: minecraft
+      protocol: TCP
       port: 25565
       targetPort: 25565
-    - protocol: HTTP
+    - name: autoscale
+      protocol: TCP
       port: 7070
       targetPort: 7070  # Should match configuration in Velagones on Velocity
   type: ClusterIP
