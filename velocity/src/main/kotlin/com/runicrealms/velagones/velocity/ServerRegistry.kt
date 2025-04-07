@@ -29,7 +29,7 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
      * server both in the Velocity proxy and in our internal connected registry.
      */
     fun discover(info: ServerInfo, grpcPort: Int) {
-        val targetIp = info.address.hostName
+        val targetIp = info.address.address.hostAddress
         val serverName = info.name
 
         val channel = ManagedChannelBuilder.forAddress(targetIp, grpcPort).usePlaintext().build()
@@ -104,9 +104,11 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
             logger.warn("Tried to remove server $serverName that does not exist")
             return
         }
+        val serverIp = server.info.address.address.hostAddress
+        val serverPort = server.info.address.port
         server.close()
         logger.info(
-            "Unregistering server $serverName in Velocity ${server.info.address.hostName}:${server.info.address.port}"
+            "Unregistering server $serverName in Velocity $serverIp:${server.info.address.port}"
         )
         proxy.unregisterServer(server.info)
     }
