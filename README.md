@@ -129,15 +129,42 @@ spec:
       ports:
         - name: game           # MUST be named game
           containerPort: 25565
+          protocol: TCP        # Important to specify, Agones defaults to UDP
         - name: grpc           # MUST be named grpc
           containerPort: 50051 # Should match configuration in Velagones on Paper
+          protocol: TCP        # Important to specify, Agones defaults to UDP
       template:
         spec:
           containers:
             - name: paper-gameserver
               image: my-image:latest
 ```
-Velocity should be deployment using its own `Deployment`, which in this example, should have app label `velocity`.
+Sample velocity deployment:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velocity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: velocity
+  template:
+    metadata:
+      labels:
+        app: velocity
+    spec:
+      serviceAccountName: velocity-sa
+      containers:
+        - name: velocity
+          image: MY_IMAGE:latest
+          ports:
+            - name: minecraft
+              containerPort: 25565
+            - name: autoscale
+              containerPort: 7070  # Should match configuration in Velagones on Velocity
+```
 Sample velocity service:
 ```yaml
 apiVersion: v1
