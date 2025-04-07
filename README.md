@@ -73,6 +73,7 @@ Here is a diagram representing the communication we are describing:
 agones {
     gameServerNamespace = "default"
     autoscaleHostPort = 7070
+    paperGrpcPort = 50051
 }
 scaling {
     serverCapacity = 20
@@ -91,6 +92,7 @@ scaling {
 - `agones.gameServerNamespace`: Which namespace to scan for GameServers in the K8s cluster.
     - Future plans to add individual fleet scanning.
 - `agones.autoscaleHostPort`: Which port to host the auto-scaler webhook. Important for later configuration of Agones.
+- `agones.paperGrpcPort`: Which port to commicate with Velagones on Paper on. Needs to match both the paper configuration, and the Agones configuration of your fleet (later down).
 - `scaling.serverCapacity`: Maximum number of players each server can hold.
 - `scaling.capacityFactor`: Goal for how many players we should be able to hold among all active servers.
     - If server capacity is 20, capacity factor is 1.5, and we have 30 players connected, we would aim to support 45, and thus want to have 3 servers open.
