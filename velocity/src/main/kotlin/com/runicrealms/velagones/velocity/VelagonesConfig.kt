@@ -20,6 +20,8 @@ class VelagonesConfig @Inject constructor(@DataDirectory val dataDirectory: Path
 
     val agonesAutoscaleHostPort: Int = config.getInt("agones.autoscaleHostPort")
 
+    val paperGrpcPort: Int = config.getInt("agones.paperGrpcPort")
+
     val scalingServerCapacity: Int =
         config.getInt("scaling.serverCapacity").also {
             if (it < 1)
