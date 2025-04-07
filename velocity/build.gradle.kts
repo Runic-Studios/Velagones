@@ -71,4 +71,7 @@ tasks.named("compileJava") { dependsOn("openApiGenerate") }
 
 tasks.withType(KaptGenerateStubsTask::class.java).configureEach { dependsOn("openApiGenerate") }
 
-tasks.shadowJar { archiveBaseName.set("velagones-velocity") }
+tasks.shadowJar {
+    archiveBaseName.set("velagones-velocity")
+    mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
+}

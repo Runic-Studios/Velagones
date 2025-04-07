@@ -30,7 +30,6 @@ dependencies {
 
     // Agones client SDK
     implementation(libs.agones4j)
-    //    implementation("com.runicrealms.agonessdk:agones4j:1.0")
 
     // gRPC + Protobuf
     implementation(libs.protobuf.kotlin)
