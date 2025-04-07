@@ -130,9 +130,12 @@ spec:
         - name: game           # MUST be named game
           containerPort: 25565
           protocol: TCP        # Important to specify, Agones defaults to UDP
+          container: paper-gameserver
         - name: grpc           # MUST be named grpc
           containerPort: 50051 # Should match configuration in Velagones on Paper
           protocol: TCP        # Important to specify, Agones defaults to UDP
+          portPolicy: None     # VERY IMPORTANT: prevents Agones from dynamically allocating a port for gRPC on the node
+          container: paper-gameserver
       template:
         spec:
           containers:
