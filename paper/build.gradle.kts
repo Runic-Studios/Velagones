@@ -6,7 +6,7 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
-    //    maven("https://nexus.runicrealms.com/repository/maven-releases/")
+    maven("https://nexus.runicrealms.com/repository/maven-releases/")
 }
 
 dependencies {
