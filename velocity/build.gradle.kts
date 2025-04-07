@@ -71,8 +71,4 @@ tasks.named("compileJava") { dependsOn("openApiGenerate") }
 
 tasks.withType(KaptGenerateStubsTask::class.java).configureEach { dependsOn("openApiGenerate") }
 
-// pluginManager.withPlugin("kapt") {
-//    tasks.named("kaptGenerateStubsKotlin") {  }
-// }
-
 tasks.shadowJar { archiveBaseName.set("velagones-velocity") }

@@ -27,11 +27,15 @@ sourceSets {
     main { java { srcDir(File(layout.buildDirectory.asFile.get(), "generated/sources/")) } }
 }
 
+val protobufVersion = libs.versions.protobuf.get()
+val grpcVersion = libs.versions.grpc.get()
+val grpcKotlinVersion = libs.versions.grpcKotlin.get()
+
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:4.30.1" }
+    protoc { artifact = "com.google.protobuf:protoc:$protobufVersion" }
     plugins {
-        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:1.71.0" }
-        id("grpckt") { artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar" }
+        id("grpc") { artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion" }
+        id("grpckt") { artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar" }
     }
     generateProtoTasks {
         base
