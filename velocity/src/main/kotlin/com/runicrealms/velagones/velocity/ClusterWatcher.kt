@@ -71,13 +71,17 @@ constructor(
             status.state != GameServerStatus.State.READY &&
                 status.state != GameServerStatus.State.UNHEALTHY &&
                 status.state != GameServerStatus.State.SHUTDOWN
-        )
+        ) {
+            logger.info("Skipping server $gameServer because it had state ${status.state}")
             return
+        }
 
         val ports = gameServer.spec.ports
         val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt() ?: return
         val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt() ?: return
         val address = status.address
+
+        logger.info("Found potential server $gameServer with gamePort $gamePort and grpcPort $grpcPort")
 
         val target = serverRegistry.connected[name]
         if (
