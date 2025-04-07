@@ -33,6 +33,8 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
      */
     fun discover(info: ServerInfo, grpcHost: String, grpcPort: Int) {
         val serverName = info.name
+        val gameIp = info.address.address.hostAddress
+        val gamePort = info.address.port
 
         val channel = ManagedChannelBuilder.forAddress(grpcHost, grpcPort).usePlaintext().build()
         val stub = VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub(channel)
@@ -47,12 +49,12 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
                 if (response.success) {
                     connected[serverName] = Server(info, channel, stub)
                     logger.info(
-                        "Discovery successful: registering server with gRPC $grpcHost:${info.address.port} in Velocity"
+                        "Discovery successful: registering server with gRPC $grpcHost:$grpcPort and game $gameIp:$gamePort named $serverName in Velocity"
                     )
                     proxy.registerServer(info)
                 } else {
                     logger.warn(
-                        "Server $grpcHost:$grpcPort did not want to be discovered over gRPC, skipping adding it"
+                        "Server named $serverName with gRPC $grpcHost:$grpcPort did not want to be discovered over gRPC, skipping adding it"
                     )
                 }
             } catch (exception: Exception) {

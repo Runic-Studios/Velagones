@@ -83,13 +83,6 @@ constructor(
             return
         }
         val grpcPort = config.paperGrpcPort
-//        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt()
-//        if (grpcPort == null) {
-//            logger.warn(
-//                "Server $name has no game port named \"grpc\" in Agones fleet spec, make sure you configured it correctly"
-//            )
-//            return
-//        }
         // Note that for gRPC we need the pod IP for internal communication
         val grpcAddress = status.addresses.firstOrNull { it.type == "PodIP" }?.address
         if (grpcAddress == null) {

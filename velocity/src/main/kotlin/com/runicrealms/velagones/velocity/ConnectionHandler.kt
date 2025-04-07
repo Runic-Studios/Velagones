@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
+import com.velocitypowered.api.event.proxy.ProxyPingEvent
 import com.velocitypowered.api.proxy.ProxyServer
 import kotlin.math.ceil
 import org.slf4j.Logger
@@ -13,6 +14,7 @@ import org.slf4j.Logger
 class ConnectionHandler
 @Inject
 constructor(
+    plugin: VelagonesPlugin,
     private val proxy: ProxyServer,
     private val logger: Logger,
     private val config: VelagonesConfig,
@@ -23,6 +25,16 @@ constructor(
 
     // How many servers we want right now
     var fleetSize = config.minServers
+        private set
+
+    init {
+        proxy.eventManager.register(plugin, this)
+    }
+
+    @Subscribe
+    fun onPing(event: ProxyPingEvent) {
+        logger.info("Received ping from ${event.connection.remoteAddress.address.hostAddress}")
+    }
 
     @Subscribe
     fun onServerPreConnect(event: ServerPreConnectEvent) {
@@ -90,7 +102,9 @@ constructor(
                     .filter { !it.deactivated }
                     .sortedBy { proxy.getServer(it.info.name).get().playersConnected.size }
             for (server in serversSorted) {
+                if (capacity <= config.minServers * serverCapacity) return
                 if (capacity - serverCapacity >= ceil(config.scalingCapacityFactor * numPlayers)) {
+                    logger.info("Deactivating server ${server.info.name} due to scale down")
                     serverRegistry.deactivate(server.info.name, false)
                     capacity -= serverCapacity
                 } else {
