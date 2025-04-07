@@ -27,35 +27,37 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
     /**
      * Sends a request to a potential server over gRPC to discover it. If successful, registers the
      * server both in the Velocity proxy and in our internal connected registry.
+     *
+     * Note that info should contain actual connection info (node IP, game port) while
+     * grpcHost:grpcPort should be internal (pod IP, grpc port)
      */
-    fun discover(info: ServerInfo, grpcPort: Int) {
-        val targetIp = info.address.address.hostAddress
+    fun discover(info: ServerInfo, grpcHost: String, grpcPort: Int) {
         val serverName = info.name
 
-        val channel = ManagedChannelBuilder.forAddress(targetIp, grpcPort).usePlaintext().build()
+        val channel = ManagedChannelBuilder.forAddress(grpcHost, grpcPort).usePlaintext().build()
         val stub = VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub(channel)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = DiscoverRequest.newBuilder().setServerName(info.name).build()
 
                 logger.info(
-                    "Sending discovery message over gRPC to server $targetIp:$grpcPort named $serverName"
+                    "Sending discovery message over gRPC to server with gRPC $grpcHost:$grpcPort named $serverName"
                 )
                 val response = stub.discover(request)
                 if (response.success) {
                     connected[serverName] = Server(info, channel, stub)
                     logger.info(
-                        "Discovery successful: registering server $targetIp:${info.address.port} in Velocity"
+                        "Discovery successful: registering server with gRPC $grpcHost:${info.address.port} in Velocity"
                     )
                     proxy.registerServer(info)
                 } else {
                     logger.warn(
-                        "Server $targetIp:$grpcPort did not want to be discovered over gRPC, skipping adding it"
+                        "Server $grpcHost:$grpcPort did not want to be discovered over gRPC, skipping adding it"
                     )
                 }
             } catch (exception: Exception) {
                 logger.error(
-                    "Failed to send discover message over gRPC to server $targetIp:$grpcPort named $serverName"
+                    "Failed to send discover message over gRPC to server $grpcHost:$grpcPort named $serverName"
                 )
                 exception.printStackTrace()
             }
@@ -107,9 +109,7 @@ constructor(private val proxy: ProxyServer, private val logger: Logger) {
         val serverIp = server.info.address.address.hostAddress
         val serverPort = server.info.address.port
         server.close()
-        logger.info(
-            "Unregistering server $serverName in Velocity $serverIp:${server.info.address.port}"
-        )
+        logger.info("Unregistering server $serverName in Velocity $serverIp:$serverPort")
         proxy.unregisterServer(server.info)
     }
 

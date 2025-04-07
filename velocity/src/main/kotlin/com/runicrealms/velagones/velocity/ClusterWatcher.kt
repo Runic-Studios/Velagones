@@ -71,13 +71,37 @@ constructor(
             status.state != GameServerStatus.State.READY &&
                 status.state != GameServerStatus.State.UNHEALTHY &&
                 status.state != GameServerStatus.State.SHUTDOWN
-        ) return
+        )
+            return
 
         val ports = gameServer.spec.ports
-        val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt() ?: return
-        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt() ?: return
-        val address = status.address
+        val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt()
+        if (gamePort == null) {
+            logger.warn(
+                "Server $name has no game port named \"game\" in Agones fleet spec, make sure you configured it correctly"
+            )
+            return
+        }
+        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt()
+        if (grpcPort == null) {
+            logger.warn(
+                "Server $name has no game port named \"grpc' in Agones fleet spec, make sur eyou configured it correctly"
+            )
+            return
+        }
+        // Note that for gRPC we need the pod IP for internal communication
+        val grpcAddress = status.addresses.firstOrNull { it.type == "PodIP" }?.address
+        if (grpcAddress == null) {
+            val addresses = status.addresses.map { "${it.address}: ${it.type}" }.joinToString(", ")
+            logger.warn("Server $name didn't have address with type PodIP, only found: $addresses")
+            return
+        }
 
+        // This depends on how your node address is configured
+        // https://agones.dev/site/docs/reference/gameserver/#primary-address-vs-addresses
+        // This should be what velocity uses, since it needs to allow player connections on the node
+        // IP
+        val nodeAddress = status.address
 
         val target = serverRegistry.connected[name]
         if (
@@ -91,10 +115,10 @@ constructor(
         } else if (status.state == GameServerStatus.State.READY) {
             if (target != null) return
             logger.info(
-                "Attempting to discover new Agones GameServer $name on address $address:$gamePort with gRPC server $grpcPort"
+                "Attempting to discover new Agones GameServer $name on address $nodeAddress:$gamePort with gRPC server $grpcPort:$grpcPort"
             )
-            val info = ServerInfo(name, InetSocketAddress(address, gamePort))
-            serverRegistry.discover(info, grpcPort)
+            val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort))
+            serverRegistry.discover(info, grpcAddress, grpcPort)
         }
     }
 }
