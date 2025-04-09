@@ -18,7 +18,6 @@ constructor(
     proxy: ProxyServer,
     private val logger: Logger,
     plugin: VelagonesPlugin,
-    private val config: VelagonesConfig,
     private val fleetRegistry: VelagonesFleetRegistry,
 ) {
 
@@ -75,18 +74,18 @@ constructor(
             return
 
         val ports = gameServer.spec.ports
-        val portsString = ports.map { "${it.name}:${it.hostPort}" }.joinToString(", ")
+        val portsString = ports.map { "{${it.name}:{hostPort:${it.hostPort},containerPort:${it.containerPort}}" }.joinToString(",")
         val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt()
-        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt()
+        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.containerPort?.toInt()
         if (gamePort == null) {
             logger.warn(
-                "Server $name has no port named \"game\" in Agones fleet spec, found instead $portsString, make sure you configured it correctly"
+                "Server $name has no port named \"game\" in Agones fleet spec, found instead {$portsString}, make sure you configured it correctly"
             )
             return
         }
         if (grpcPort == null) {
             logger.warn(
-                "Server $name has no port named \"grpc\" in Agones fleet spec, found instead $portsString, make sure you configured it correctly"
+                "Server $name has no port named \"grpc\" in Agones fleet spec, found instead {$portsString}, make sure you configured it correctly"
             )
             return
         }
