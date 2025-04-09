@@ -2,6 +2,8 @@ package com.runicrealms.velagones.velocity
 
 import com.google.inject.Guice
 import com.google.inject.Inject
+import com.google.inject.util.Modules
+import com.runicrealms.velagones.velocity.api.event.VelagonesInjectEvent
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
@@ -25,16 +27,15 @@ constructor(
 ) {
 
     @Subscribe
-    fun onInitialize(event: ProxyInitializeEvent) {
-        // Inject the Guice
+    fun onProxyInitialize(event: ProxyInitializeEvent) {
+        // Load the module
         val module = VelagonesModule(this, proxy, logger, dataDirectory)
-        val injector = Guice.createInjector(module)
 
-        // Register listeners with velocity
-        for (listenerClass in module.listeners) {
-            val listener = injector.getInstance(listenerClass)
-            proxy.eventManager.register(this, listener)
-            logger.info("Registered VelagonesListener in velocity ${listener.javaClass.name}")
-        }
+        // Load overrides
+        val overrides = proxy.eventManager.fire(VelagonesInjectEvent()).get().overrides
+        val stackedModule = Modules.override(module).with(overrides)
+
+        // Inject the Guice
+        Guice.createInjector(stackedModule)
     }
 }

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Velagones",
+  "type": "object",
+  "properties": {
+    "cluster": {
+      "type": "object",
+      "properties": {
+        "grpcHostPort": { "type": "integer" },
+        "agonesSdk": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" },
+            "port": { "type": "integer" }
+          },
+          "required": ["address", "port"]
+        }
+      },
+      "required": ["grpcHostPort", "agonesSdk"]
+    }
+  },
+  "required": ["cluster", "selector", "serverGroups"]
+}

@@ -1,0 +1,5 @@
+cluster:
+  grpcHostPort: 50051
+  agonesSdk:
+    address: localhost
+    port: 9357

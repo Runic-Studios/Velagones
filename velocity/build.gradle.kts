@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.openapi)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.jsonschema2pojo)
 }
 
 repositories {
@@ -19,9 +20,14 @@ dependencies {
     implementation(libs.kotlin.test)
 
     // Configuration and Injection
-    implementation(libs.reflections)
     implementation(libs.guice)
-    implementation(libs.typesafe.config)
+    implementation(libs.jackson.kotlin)
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.dataformat.yaml)
+    implementation(libs.jsonschema2pojo)
+    implementation(libs.hibernate)
+    implementation(libs.jakarta.validation)
+    implementation(libs.javax.validation)
 
     // Velocity
     kapt(libs.velocity.api)
@@ -43,8 +49,6 @@ dependencies {
 
     // Javalin for Agones Autoscaler
     implementation(libs.javalin)
-    implementation(libs.jackson.kotlin)
-    implementation(libs.jackson.databind)
 
     // For OpenAPI
     implementation(libs.okhttp)
@@ -69,9 +73,22 @@ tasks.build { dependsOn("shadowJar") }
 
 tasks.named("compileJava") { dependsOn("openApiGenerate") }
 
-tasks.withType(KaptGenerateStubsTask::class.java).configureEach { dependsOn("openApiGenerate") }
+tasks.withType(KaptGenerateStubsTask::class.java).configureEach {
+    dependsOn("openApiGenerate")
+    dependsOn("generateJsonSchema2Pojo")
+}
 
 tasks.shadowJar {
     archiveBaseName.set("velagones-velocity")
     mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
+}
+
+jsonSchema2Pojo {
+    setSource(files("src/main/resources/config.schema.json"))
+    targetPackage = "com.runicrealms.velagones.velocity.config"
+    useTitleAsClassname = true
+    removeOldOutput = true
+    initializeCollections = true
+    classNameSuffix = "Config"
+    includeJsr303Annotations = true
 }

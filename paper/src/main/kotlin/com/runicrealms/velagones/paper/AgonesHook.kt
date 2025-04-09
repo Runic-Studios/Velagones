@@ -1,21 +1,31 @@
-package com.runicrealms.velagones.paper.agones
+package com.runicrealms.velagones.paper
 
 import com.google.inject.Inject
-import com.runicrealms.velagones.paper.VelagonesComponent
+import com.runicrealms.velagones.paper.config.VelagonesConfig
 import io.grpc.ManagedChannelBuilder
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import net.infumia.agones4j.Agones
+import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.slf4j.Logger
 
-@VelagonesComponent
-class AgonesHook @Inject constructor(private val logger: Logger) : Listener {
+class AgonesHook
+@Inject
+constructor(plugin: VelagonesPlugin, private val logger: Logger, config: VelagonesConfig) :
+    Listener {
+
+    private val address = config.cluster.agonesSdk.address
+    private val port = config.cluster.agonesSdk.port
+
+    init {
+        Bukkit.getPluginManager().registerEvents(this, plugin)
+    }
 
     private val allocated = false
 
@@ -24,8 +34,8 @@ class AgonesHook @Inject constructor(private val logger: Logger) : Listener {
         Executors.newSingleThreadScheduledExecutor()
     val agones: Agones =
         Agones.builder()
-            .withAddress("localhost", 9357)
-            .withChannel(ManagedChannelBuilder.forAddress("localhost", 9357).usePlaintext().build())
+            .withAddress(address, port)
+            .withChannel(ManagedChannelBuilder.forAddress(address, port).usePlaintext().build())
             .withGameServerWatcherExecutor(gameServerWatcherExecutor)
             .withHealthCheck(
                 Duration.ofSeconds(1L), // Delay
@@ -35,7 +45,7 @@ class AgonesHook @Inject constructor(private val logger: Logger) : Listener {
             .build()
 
     init {
-        logger.info("Instantiated Agones hook on localhost:9357")
+        logger.info("Instantiated Agones SDK hook on $address:$port")
         if (agones.canHealthCheck()) {
             agones.startHealthChecking()
             logger.info("Began Agones health checking")

@@ -1,6 +1,7 @@
 package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
+import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
@@ -11,7 +12,6 @@ import io.fabric8.kubernetes.client.WatcherException
 import java.net.InetSocketAddress
 import org.slf4j.Logger
 
-@VelagonesComponent
 class ClusterWatcher
 @Inject
 constructor(
@@ -19,7 +19,7 @@ constructor(
     private val logger: Logger,
     plugin: VelagonesPlugin,
     private val config: VelagonesConfig,
-    private val serverRegistry: ServerRegistry,
+    private val serverGroupSet: ServerGroupSet,
 ) {
 
     init {
@@ -42,7 +42,7 @@ constructor(
         val client = KubernetesClientBuilder().build()
         client
             .resources(GameServer::class.java)
-            .inNamespace(config.agonesGameServerNamespace)
+            .inNamespace(config.cluster.gameServerNamespace)
             .watch(
                 object : Watcher<GameServer> {
                     override fun eventReceived(action: Watcher.Action, resource: GameServer?) {
@@ -82,7 +82,7 @@ constructor(
             )
             return
         }
-        val grpcPort = config.paperGrpcPort
+        val grpcPort = config.cluster.paperGrpcPort
         // Note that for gRPC we need the pod IP for internal communication
         val grpcAddress = status.addresses.firstOrNull { it.type == "PodIP" }?.address
         if (grpcAddress == null) {
@@ -97,22 +97,44 @@ constructor(
         // IP
         val nodeAddress = status.address
 
-        val target = serverRegistry.connected[name]
+        // Some of these ("capacity", "group") are used by Velagones to store information
+        // The rest are passed on to the VelagonesGameServers
+        val labels = gameServer.metadata.labels
+
+        val groupLabel = labels["group"]
+        if (groupLabel == null) {
+            logger.warn("Server $name is missing group label, ignoring")
+            return
+        }
+        val group = serverGroupSet.groups[groupLabel]
+        if (group == null) {
+            logger.warn("Server $name has unknown group \"$groupLabel\", ignoring")
+            return
+        }
+
+        val capacity = labels["capacity"]?.toIntOrNull()
+        if (capacity == null) {
+            logger.warn("Server $name is missing capacity label, ignoring")
+            return
+        }
+
+        val target = group.registry.connected[name]
         if (
             status.state == GameServerStatus.State.SHUTDOWN ||
                 status.state == GameServerStatus.State.UNHEALTHY
         ) {
             target ?: return
             logger.info("Removing game server $name since Agones marked it as shutdown/unhealthy")
-            serverRegistry.remove(name)
+            group.registry.remove(target)
             return
         } else if (status.state == GameServerStatus.State.READY) {
             if (target != null) return
+
             logger.info(
                 "Attempting to discover new Agones GameServer $name on address $nodeAddress:$gamePort with gRPC server $grpcAddress:$grpcPort"
             )
             val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort))
-            serverRegistry.discover(info, grpcAddress, grpcPort)
+            group.registry.discover(info, labels, groupLabel, capacity, grpcAddress, grpcPort)
         }
     }
 }
