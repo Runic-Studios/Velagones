@@ -14,7 +14,7 @@ constructor(
     plugin: VelagonesPlugin,
     proxy: ProxyServer,
     private val logger: Logger,
-    private val serverGroupSet: ServerGroupSet,
+    private val fleetRegistry: VelagonesFleetRegistry,
     private val serverSelector: ServerSelector,
 ) {
 
@@ -24,7 +24,7 @@ constructor(
 
     @Subscribe
     fun onServerPreConnect(event: PlayerChooseInitialServerEvent) {
-        val servers = serverGroupSet.groups.values.map { it.registry.connected.values }.flatten()
+        val servers = fleetRegistry.fleets.values.map { it.registry.connected.values }.flatten()
 
         val selectionResponse = serverSelector.selectServer(event.player, servers)
 

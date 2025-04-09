@@ -3,7 +3,6 @@ package com.runicrealms.velagones.paper
 import com.google.inject.Inject
 import com.runicrealms.velagones.paper.api.event.VelagonesDeactivateEvent
 import com.runicrealms.velagones.paper.api.event.VelagonesDiscoverEvent
-import com.runicrealms.velagones.paper.config.VelagonesConfig
 import com.runicrealms.velagones.service.*
 import io.grpc.ServerBuilder
 import net.kyori.adventure.text.Component
@@ -19,7 +18,6 @@ constructor(
     private val logger: Logger,
     private val agonesHook: AgonesHook,
     private val plugin: VelagonesPlugin,
-    config: VelagonesConfig,
 ) : VelagonesPaperGrpcKt.VelagonesPaperCoroutineImplBase(), Listener {
 
     var discovered = false
@@ -31,7 +29,11 @@ constructor(
     var deactivated = false
         private set
 
-    val port = config.cluster.grpcHostPort
+    val port =
+        System.getenv("VELAGONES_GRPC_PORT")?.toIntOrNull()
+            ?: throw IllegalArgumentException(
+                "VELAGONES_GRPC_PORT environment variable is undefined, ensure you have added it in the fleet spec"
+            )
 
     val grpcServer = let {
         try {

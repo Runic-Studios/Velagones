@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.contains
 import com.google.inject.AbstractModule
 import com.runicrealms.velagones.velocity.api.selector.DistributedServerSelector
 import com.runicrealms.velagones.velocity.api.selector.PackedServerSelector
@@ -48,7 +47,7 @@ class VelagonesModule(
         }
 
         // Bind Velagones classes
-        bind(ServerGroupSet::class.java).asEagerSingleton()
+        bind(VelagonesFleetRegistry::class.java).asEagerSingleton()
         bind(ClusterWatcher::class.java).asEagerSingleton()
         bind(ConnectionHandler::class.java).asEagerSingleton()
     }
@@ -59,9 +58,9 @@ class VelagonesModule(
                 .registerModule(KotlinModule.Builder().build())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val fallback = mapper.readTree(javaClass.classLoader.getResource("config.yml"))
+        val fallback = mapper.readTree(javaClass.classLoader.getResource("config.fallback.yml"))
 
-        val configFile = File(dataDirectory.toFile(), "config.yml")
+        val configFile = File(dataDirectory.toFile(), "config.fallback.yml")
         val mergedNode =
             if (configFile.exists()) {
                 val primary = mapper.readTree(configFile)
@@ -69,7 +68,7 @@ class VelagonesModule(
                     (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
                 }
             } else {
-                logger.warn("No config.yml detected, falling back to defaults")
+                logger.warn("No config.fallback.yml detected, falling back to defaults")
                 fallback
             }
 

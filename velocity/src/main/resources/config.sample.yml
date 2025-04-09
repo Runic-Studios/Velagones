@@ -1,11 +1,7 @@
-cluster:
-  gameServerNamespace: "default"
-  paperGrpcPort: 50051
-
 selector:
   type: distributed
 
-serverGroups:
+fleets:
   - name: "default"
     serverCapacity: 20
     autoscaler:

@@ -63,14 +63,6 @@
     }
   },
   "properties": {
-    "cluster": {
-      "type": "object",
-      "properties": {
-        "gameServerNamespace": { "type": "string" },
-        "paperGrpcPort": { "type": "integer" }
-      },
-      "required": ["gameServerNamespace", "paperGrpcPort"]
-    },
     "selector": {
       "type": "object",
       "properties": {
@@ -91,7 +83,7 @@
       },
       "required": ["type"]
     },
-    "serverGroups": {
+    "fleets": {
       "type": "array",
       "items": {
         "type": "object",
@@ -111,5 +103,5 @@
       }
     }
   },
-  "required": ["cluster", "selector", "serverGroups"]
+  "required": ["selector", "fleets"]
 }

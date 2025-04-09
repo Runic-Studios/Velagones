@@ -15,17 +15,15 @@ import java.io.Closeable
  * @param registeredServer The RegisteredServer in the Velocity proxy
  * @param grpcChannel The ManagedChannel for communicating to this server over gRPC
  * @param grpcStub The stub we have started
- * @param group The name of the Server Group it belongs to
- * @param capacity How many players this server can fit
- * @param labels The labels provided to the server by the Agones gameserver spec
+ * @param fleet The name of the Agones Fleet it belongs to
+ * @param capacity Maximum number of players that can connect to it
  */
 data class VelagonesGameServer(
     val registeredServer: RegisteredServer,
     private val grpcChannel: ManagedChannel,
     val grpcStub: VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub,
-    val group: String,
+    val fleet: String,
     val capacity: Int,
-    val labels: Map<String, String>,
 ) : Closeable {
     /**
      * Represents whether this server is currently receiving players.
@@ -34,6 +32,7 @@ data class VelagonesGameServer(
      * connections (and be waiting for existing ones to leave so that it can shut down).
      */
     var deactivated = false
+        internal set
 
     override fun close() {
         grpcChannel.shutdown()

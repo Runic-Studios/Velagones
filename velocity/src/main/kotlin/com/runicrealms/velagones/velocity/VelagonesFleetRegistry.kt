@@ -7,19 +7,17 @@ import java.util.concurrent.ConcurrentHashMap
 import org.slf4j.Logger
 
 /** Represents all the registered server groups on the Velagones plugin. */
-class ServerGroupSet
+class VelagonesFleetRegistry
 @Inject
 constructor(proxy: ProxyServer, plugin: VelagonesPlugin, logger: Logger, config: VelagonesConfig) {
 
-    val groups = ConcurrentHashMap<String, ServerGroup>()
+    val fleets = ConcurrentHashMap<String, VelagonesFleet>()
 
     init {
-        val addDefault = config.serverGroups.size == 1
-        for (groupConfig in config.serverGroups) {
-            val name = groupConfig.name
-            if (!addDefault && name == "default") continue
+        for (fleetConfig in config.fleets) {
+            val name = fleetConfig.name
             logger.info("Registering server group $name")
-            groups[name] = ServerGroup(proxy, plugin, logger, groupConfig, name)
+            fleets[name] = VelagonesFleet(proxy, plugin, logger, fleetConfig, name)
         }
     }
 }

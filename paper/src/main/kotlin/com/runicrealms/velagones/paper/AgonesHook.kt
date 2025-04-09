@@ -1,7 +1,6 @@
 package com.runicrealms.velagones.paper
 
 import com.google.inject.Inject
-import com.runicrealms.velagones.paper.config.VelagonesConfig
 import io.grpc.ManagedChannelBuilder
 import java.time.Duration
 import java.util.concurrent.ExecutorService
@@ -15,13 +14,14 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.slf4j.Logger
 
-class AgonesHook
-@Inject
-constructor(plugin: VelagonesPlugin, private val logger: Logger, config: VelagonesConfig) :
+class AgonesHook @Inject constructor(plugin: VelagonesPlugin, private val logger: Logger) :
     Listener {
 
-    private val address = config.cluster.agonesSdk.address
-    private val port = config.cluster.agonesSdk.port
+    private val port =
+        System.getenv("AGONES_SDK_GRPC_PORT")?.toIntOrNull()
+            ?: throw IllegalArgumentException(
+                "AGONES_SDK_GRPC_PORT environment variable is undefined, ensure we are running on an Agones GameServer"
+            )
 
     init {
         Bukkit.getPluginManager().registerEvents(this, plugin)
@@ -34,8 +34,8 @@ constructor(plugin: VelagonesPlugin, private val logger: Logger, config: Velagon
         Executors.newSingleThreadScheduledExecutor()
     val agones: Agones =
         Agones.builder()
-            .withAddress(address, port)
-            .withChannel(ManagedChannelBuilder.forAddress(address, port).usePlaintext().build())
+            .withAddress("localhost", port)
+            .withChannel(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build())
             .withGameServerWatcherExecutor(gameServerWatcherExecutor)
             .withHealthCheck(
                 Duration.ofSeconds(1L), // Delay
@@ -45,7 +45,7 @@ constructor(plugin: VelagonesPlugin, private val logger: Logger, config: Velagon
             .build()
 
     init {
-        logger.info("Instantiated Agones SDK hook on $address:$port")
+        logger.info("Instantiated Agones SDK hook on localhost:$port")
         if (agones.canHealthCheck()) {
             agones.startHealthChecking()
             logger.info("Began Agones health checking")

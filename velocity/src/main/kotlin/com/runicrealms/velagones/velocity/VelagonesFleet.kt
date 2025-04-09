@@ -10,7 +10,7 @@ import com.runicrealms.velagones.velocity.api.event.server.VelagonesDeactivateSe
 import com.runicrealms.velagones.velocity.api.event.server.VelagonesDiscoverServerEvent
 import com.runicrealms.velagones.velocity.api.event.server.VelagonesRemoveServerEvent
 import com.runicrealms.velagones.velocity.config.AutoscalerConfig
-import com.runicrealms.velagones.velocity.config.ServerGroupConfig
+import com.runicrealms.velagones.velocity.config.FleetConfig
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.ProxyServer
@@ -26,14 +26,14 @@ import org.slf4j.Logger
  * - All recognized by Velagones
  * - Connected to the Velocity Proxy
  * - Discovered through Agones
- * - Share a common "group" label
+ * - Are all in the same Agones fleet
  * - Can be autoscaled as a group
  */
-class ServerGroup(
+class VelagonesFleet(
     private val proxy: ProxyServer,
     private val plugin: VelagonesPlugin,
     private val logger: Logger,
-    config: ServerGroupConfig,
+    config: FleetConfig,
     val name: String,
 ) {
 
@@ -43,13 +43,15 @@ class ServerGroup(
 
     val registry = Registry()
 
+    val serverCapacity = config.serverCapacity
+
     val autoscalerEndpoint: AutoscalerEndpoint? = run {
         val autoscaler: Autoscaler? =
             when (config.autoscaler.type!!) {
                 AutoscalerConfig.Type.DEFAULT ->
                     DefaultAutoscaler(
                         config.autoscaler.default,
-                        config.serverCapacity,
+                        serverCapacity,
                         config.autoscaler.minServers
                             ?: throw IllegalArgumentException(
                                 "Missing config: autoscaler.minServers"
@@ -86,14 +88,7 @@ class ServerGroup(
          * Note that info should contain actual connection info (node IP, game port) while
          * grpcHost:grpcPort should be internal (pod IP, grpc port)
          */
-        fun discover(
-            info: ServerInfo,
-            labels: Map<String, String>,
-            group: String,
-            capacity: Int,
-            grpcHost: String,
-            grpcPort: Int,
-        ) {
+        fun discover(info: ServerInfo, fleet: VelagonesFleet, grpcHost: String, grpcPort: Int) {
             val serverName = info.name
             val gameIp = info.address.address.hostAddress
             val gamePort = info.address.port
@@ -116,9 +111,8 @@ class ServerGroup(
                                 registeredServer,
                                 channel,
                                 stub,
-                                group,
-                                capacity,
-                                labels,
+                                fleet.name,
+                                fleet.serverCapacity,
                             )
                         connected[info.name] = gameServer
                         logger.info(

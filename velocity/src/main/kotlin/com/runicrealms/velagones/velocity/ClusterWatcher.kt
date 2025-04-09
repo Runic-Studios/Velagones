@@ -19,7 +19,7 @@ constructor(
     private val logger: Logger,
     plugin: VelagonesPlugin,
     private val config: VelagonesConfig,
-    private val serverGroupSet: ServerGroupSet,
+    private val fleetRegistry: VelagonesFleetRegistry,
 ) {
 
     init {
@@ -42,7 +42,7 @@ constructor(
         val client = KubernetesClientBuilder().build()
         client
             .resources(GameServer::class.java)
-            .inNamespace(config.cluster.gameServerNamespace)
+            .inAnyNamespace()
             .watch(
                 object : Watcher<GameServer> {
                     override fun eventReceived(action: Watcher.Action, resource: GameServer?) {
@@ -75,14 +75,22 @@ constructor(
             return
 
         val ports = gameServer.spec.ports
+        val portsString = ports.map { "${it.name}:${it.hostPort}" }.joinToString(", ")
         val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt()
+        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.hostPort?.toInt()
         if (gamePort == null) {
             logger.warn(
-                "Server $name has no game port named \"game\" in Agones fleet spec, make sure you configured it correctly"
+                "Server $name has no port named \"game\" in Agones fleet spec, found instead $portsString, make sure you configured it correctly"
             )
             return
         }
-        val grpcPort = config.cluster.paperGrpcPort
+        if (grpcPort == null) {
+            logger.warn(
+                "Server $name has no port named \"grpc\" in Agones fleet spec, found instead $portsString, make sure you configured it correctly"
+            )
+            return
+        }
+
         // Note that for gRPC we need the pod IP for internal communication
         val grpcAddress = status.addresses.firstOrNull { it.type == "PodIP" }?.address
         if (grpcAddress == null) {
@@ -97,35 +105,19 @@ constructor(
         // IP
         val nodeAddress = status.address
 
-        // Some of these ("capacity", "group") are used by Velagones to store information
-        // The rest are passed on to the VelagonesGameServers
-        val labels = gameServer.metadata.labels
+        val labels = gameServer.metadata.labels ?: return
 
-        val groupLabel = labels["group"]
-        if (groupLabel == null) {
-            logger.warn("Server $name is missing group label, ignoring")
-            return
-        }
-        val group = serverGroupSet.groups[groupLabel]
-        if (group == null) {
-            logger.warn("Server $name has unknown group \"$groupLabel\", ignoring")
-            return
-        }
+        val fleetLabel = labels["agones.dev/fleet"] ?: return
+        val fleet = fleetRegistry.fleets[fleetLabel] ?: return
 
-        val capacity = labels["capacity"]?.toIntOrNull()
-        if (capacity == null) {
-            logger.warn("Server $name is missing capacity label, ignoring")
-            return
-        }
-
-        val target = group.registry.connected[name]
+        val target = fleet.registry.connected[name]
         if (
             status.state == GameServerStatus.State.SHUTDOWN ||
                 status.state == GameServerStatus.State.UNHEALTHY
         ) {
             target ?: return
             logger.info("Removing game server $name since Agones marked it as shutdown/unhealthy")
-            group.registry.remove(target)
+            fleet.registry.remove(target)
             return
         } else if (status.state == GameServerStatus.State.READY) {
             if (target != null) return
@@ -134,7 +126,7 @@ constructor(
                 "Attempting to discover new Agones GameServer $name on address $nodeAddress:$gamePort with gRPC server $grpcAddress:$grpcPort"
             )
             val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort))
-            group.registry.discover(info, labels, groupLabel, capacity, grpcAddress, grpcPort)
+            fleet.registry.discover(info, fleet, grpcAddress, grpcPort)
         }
     }
 }

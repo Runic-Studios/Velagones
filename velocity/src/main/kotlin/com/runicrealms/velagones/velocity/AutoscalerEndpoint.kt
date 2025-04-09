@@ -15,7 +15,7 @@ class AutoscalerEndpoint(
     private val logger: Logger,
     private val autoscaler: Autoscaler,
     private val autoscalerConfig: AutoscalerConfig,
-    private val registry: ServerGroup.Registry,
+    private val registry: VelagonesFleet.Registry,
 ) {
 
     private val port =

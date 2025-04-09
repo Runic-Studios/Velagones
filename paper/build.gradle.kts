@@ -1,9 +1,6 @@
-import org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask
-
 plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.protobuf)
-    alias(libs.plugins.jsonschema2pojo)
 }
 
 repositories {
@@ -23,13 +20,6 @@ dependencies {
     implementation(libs.guice)
     implementation(libs.jackson.kotlin)
     implementation(libs.jackson.databind)
-    implementation(libs.jackson.dataformat.yaml)
-    implementation(libs.jsonschema2pojo)
-    implementation(libs.hibernate)
-    implementation(libs.jakarta.validation)
-    implementation(libs.jakarta.el)
-    implementation(libs.el.impl)
-    implementation(libs.expressly)
 
     // PaperMC
     compileOnly(libs.paper.api)
@@ -54,22 +44,9 @@ tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.build { dependsOn("shadowJar") }
 
-tasks.withType(KaptGenerateStubsTask::class.java).configureEach {
-    dependsOn("generateJsonSchema2Pojo")
-}
-
 tasks.shadowJar {
     archiveBaseName.set("velagones-paper")
     mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
     relocate("com.google.protobuf", "shadow.com.google.protobuf")
     relocate("com.fasterxml.jackson", "shadow.com.fasterxml.jackson")
-}
-
-jsonSchema2Pojo {
-    setSource(files("src/main/resources/config.schema.json"))
-    targetPackage = "com.runicrealms.velagones.paper.config"
-    useTitleAsClassname = true
-    removeOldOutput = true
-    initializeCollections = true
-    classNameSuffix = "Config"
 }
