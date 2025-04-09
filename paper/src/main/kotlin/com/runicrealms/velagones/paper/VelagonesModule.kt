@@ -36,7 +36,7 @@ class VelagonesModule(private val plugin: VelagonesPlugin, private val logger: L
 
         val configFile = File(plugin.dataFolder, "config.yml")
         val mergedNode =
-            if (configFile.exists()) {
+            if (!configFile.exists()) {
                 logger.warn("No config.yml detected, falling back to defaults")
                 val primary = mapper.readTree(configFile)
                 fallback.deepCopy<JsonNode>().apply {
