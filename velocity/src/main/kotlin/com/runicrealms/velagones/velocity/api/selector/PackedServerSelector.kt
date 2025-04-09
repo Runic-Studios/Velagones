@@ -17,7 +17,6 @@ class PackedServerSelector(config: VelagonesConfig) : ServerSelector {
         config.selector.packed?.targetCapacity
             ?: throw IllegalArgumentException("Missing config: selector.packed.targetCapacity")
 
-
     override fun selectServer(
         player: Player,
         activeServers: Collection<VelagonesGameServer>,

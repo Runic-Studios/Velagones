@@ -32,7 +32,7 @@ class VelagonesModule(private val plugin: VelagonesPlugin, private val logger: L
                 .registerModule(KotlinModule.Builder().build())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val fallback = mapper.readTree(ClassLoader.getSystemResource("config.yml"))
+        val fallback = mapper.readTree(javaClass.classLoader.getResource("config.yml"))
 
         val configFile = File(plugin.dataFolder, "config.yml")
         val mergedNode =
