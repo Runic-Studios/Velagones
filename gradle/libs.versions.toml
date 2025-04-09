@@ -43,7 +43,7 @@ hibernate = "org.hibernate.validator:hibernate-validator:8.0.2.Final"
 jakarta-validation = "jakarta.validation:jakarta.validation-api:3.1.1"
 jakarta-el = "jakarta.el:jakarta.el-api:6.0.1"
 el-impl = "org.glassfish.web:el-impl:2.2"
-expressly = "org.glassifsh.expressly:expressly:5.0.0"
+expressly = "org.glassfish.expressly:expressly:5.0.0"
 javax-validation = "javax.validation:validation-api:2.0.1.Final"
 jsonschema2pojo = { module = "org.jsonschema2pojo:jsonschema2pojo-core", version.ref = "jsonschema2pojo" }
 okhttp = "com.squareup.okhttp3:okhttp:4.12.0"
