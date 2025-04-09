@@ -22,5 +22,4 @@ constructor(proxy: ProxyServer, plugin: VelagonesPlugin, logger: Logger, config:
             groups[name] = ServerGroup(proxy, plugin, logger, groupConfig, name)
         }
     }
-
 }

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.contains
-import com.fasterxml.jackson.module.kotlin.readValues
 import com.google.inject.AbstractModule
 import com.runicrealms.velagones.velocity.api.selector.DistributedServerSelector
 import com.runicrealms.velagones.velocity.api.selector.PackedServerSelector
@@ -60,13 +59,17 @@ class VelagonesModule(
                 .registerModule(KotlinModule.Builder().build())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val primary = mapper.readTree(File(dataDirectory.toFile(), "config.yml"))
         val fallback = mapper.readTree(ClassLoader.getSystemResource("config.yml"))
 
+        val configFile = File(dataDirectory.toFile(), "config.yml")
         val mergedNode =
-            fallback.deepCopy<JsonNode>().apply {
-                (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
-            }
+            if (configFile.exists()) {
+                logger.warn("No config.yml detected, falling back to defaults")
+                val primary = mapper.readTree(configFile)
+                fallback.deepCopy<JsonNode>().apply {
+                    (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
+                }
+            } else fallback
 
         val merged = mapper.treeToValue(mergedNode, VelagonesConfig::class.java)
 

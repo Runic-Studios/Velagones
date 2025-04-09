@@ -13,9 +13,11 @@ import com.velocitypowered.api.proxy.Player
  */
 class PackedServerSelector(config: VelagonesConfig) : ServerSelector {
 
-    private val capacityTarget = config.selector.packed?.targetCapacity ?: {
-        throw IllegalArgumentException("Missing config: selector.packed.targetCapacity")
-    }
+    private val capacityTarget =
+        config.selector.packed?.targetCapacity
+            ?: {
+                throw IllegalArgumentException("Missing config: selector.packed.targetCapacity")
+            }
 
     override fun selectServer(
         player: Player,

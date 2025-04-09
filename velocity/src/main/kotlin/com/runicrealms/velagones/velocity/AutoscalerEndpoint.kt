@@ -18,7 +18,9 @@ class AutoscalerEndpoint(
     private val registry: ServerGroup.Registry,
 ) {
 
-    private val port = autoscalerConfig.hostPort ?: throw IllegalArgumentException("Missing config: autoscaler.hostPort")
+    private val port =
+        autoscalerConfig.hostPort
+            ?: throw IllegalArgumentException("Missing config: autoscaler.hostPort")
 
     init {
         proxy.scheduler.buildTask(plugin, Runnable { startJavalin() })

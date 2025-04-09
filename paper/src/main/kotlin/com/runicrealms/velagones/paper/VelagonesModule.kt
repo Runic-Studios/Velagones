@@ -32,13 +32,17 @@ class VelagonesModule(private val plugin: VelagonesPlugin, private val logger: L
                 .registerModule(KotlinModule.Builder().build())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val primary = mapper.readTree(ClassLoader.getSystemResource("config.yml"))
-        val fallback = mapper.readTree(File(plugin.dataFolder, "config.yml"))
+        val fallback = mapper.readTree(ClassLoader.getSystemResource("config.yml"))
 
+        val configFile = File(plugin.dataFolder, "config.yml")
         val mergedNode =
-            fallback.deepCopy<JsonNode>().apply {
-                (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
-            }
+            if (configFile.exists()) {
+                logger.warn("No config.yml detected, falling back to defaults")
+                val primary = mapper.readTree(configFile)
+                fallback.deepCopy<JsonNode>().apply {
+                    (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
+                }
+            } else fallback
 
         val merged = mapper.treeToValue(mergedNode, VelagonesConfig::class.java)
 

@@ -16,10 +16,10 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import io.grpc.ManagedChannelBuilder
+import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.*
 import org.slf4j.Logger
-import java.io.Closeable
 
 /**
  * A group of PaperMC servers that are
@@ -50,7 +50,10 @@ class ServerGroup(
                     DefaultAutoscaler(
                         config.autoscaler.default,
                         config.serverCapacity,
-                        config.autoscaler.minServers ?: throw IllegalArgumentException("Missing config: autoscaler.minServers"),
+                        config.autoscaler.minServers
+                            ?: throw IllegalArgumentException(
+                                "Missing config: autoscaler.minServers"
+                            ),
                     )
                 AutoscalerConfig.Type.DISABLED -> null
             }
@@ -71,7 +74,7 @@ class ServerGroup(
     }
 
     /** A registry of all PaperMC servers that we are communicating with */
-    inner class Registry: Closeable {
+    inner class Registry : Closeable {
 
         /** Maps game server names to their instances */
         internal val connected = ConcurrentHashMap<String, VelagonesGameServer>()
