@@ -27,7 +27,7 @@ dependencies {
     implementation(libs.jsonschema2pojo)
     implementation(libs.hibernate)
     implementation(libs.jakarta.validation)
-    implementation(libs.expressly)
+    implementation(libs.jakarta.el)
 
     // PaperMC
     compileOnly(libs.paper.api)

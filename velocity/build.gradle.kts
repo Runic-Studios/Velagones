@@ -28,7 +28,7 @@ dependencies {
     implementation(libs.hibernate)
     implementation(libs.jakarta.validation)
     implementation(libs.javax.validation)
-    implementation(libs.expressly)
+    implementation(libs.jakarta.el)
 
     // Velocity
     kapt(libs.velocity.api)
