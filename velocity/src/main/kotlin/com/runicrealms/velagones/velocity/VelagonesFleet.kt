@@ -126,9 +126,9 @@ class VelagonesFleet(
                     }
                 } catch (exception: Exception) {
                     logger.error(
-                        "Failed to send discover message over gRPC to server $grpcHost:$grpcPort named $serverName"
+                        "Failed to send discover message over gRPC to server $grpcHost:$grpcPort named $serverName",
+                        exception,
                     )
-                    exception.printStackTrace()
                 }
             }
         }

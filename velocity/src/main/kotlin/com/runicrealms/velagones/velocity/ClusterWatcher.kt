@@ -47,8 +47,7 @@ constructor(
                         try {
                             updateServer(resource ?: return)
                         } catch (exception: Exception) {
-                            logger.error("Failed to handle updating Agones GameServer")
-                            exception.printStackTrace()
+                            logger.error("Failed to handle updating Agones GameServer", exception)
                         }
                     }
 
