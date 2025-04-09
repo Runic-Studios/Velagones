@@ -42,7 +42,7 @@ constructor(
         val client = KubernetesClientBuilder().build()
         client
             .resources(GameServer::class.java)
-            .inAnyNamespace()
+            .inNamespace(client.namespace)
             .watch(
                 object : Watcher<GameServer> {
                     override fun eventReceived(action: Watcher.Action, resource: GameServer?) {
