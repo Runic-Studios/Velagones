@@ -1,7 +1,6 @@
 package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
-import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
@@ -74,7 +73,10 @@ constructor(
             return
 
         val ports = gameServer.spec.ports
-        val portsString = ports.map { "{${it.name}:{hostPort:${it.hostPort},containerPort:${it.containerPort}}" }.joinToString(",")
+        val portsString =
+            ports
+                .map { "{${it.name}:{hostPort:${it.hostPort},containerPort:${it.containerPort}}" }
+                .joinToString(",")
         val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt()
         val grpcPort = ports.firstOrNull { it.name == "grpc" }?.containerPort?.toInt()
         if (gamePort == null) {

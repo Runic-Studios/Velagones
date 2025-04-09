@@ -60,7 +60,7 @@ class VelagonesModule(
 
         val fallback = mapper.readTree(javaClass.classLoader.getResource("config.fallback.yml"))
 
-        val configFile = File(dataDirectory.toFile(), "config.fallback.yml")
+        val configFile = File(dataDirectory.toFile(), "config.yml")
         val mergedNode =
             if (configFile.exists()) {
                 val primary = mapper.readTree(configFile)
@@ -68,7 +68,7 @@ class VelagonesModule(
                     (this as ObjectNode).setAll<ObjectNode>(primary as ObjectNode)
                 }
             } else {
-                logger.warn("No config.fallback.yml detected, falling back to defaults")
+                logger.warn("No config.yml detected, falling back to defaults")
                 fallback
             }
 
