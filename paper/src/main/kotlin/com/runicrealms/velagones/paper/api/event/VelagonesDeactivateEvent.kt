@@ -8,7 +8,7 @@ import org.bukkit.event.HandlerList
  *
  * @param immediate Indicates if we are shutting down immediately
  */
-data class VelagonesDeactivateEvent(val immediate: Boolean) : Event() {
+data class VelagonesDeactivateEvent(val immediate: Boolean) : Event(true) {
 
     companion object {
         private val HANDLERS: HandlerList = HandlerList()
