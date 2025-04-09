@@ -46,3 +46,4 @@ jsonschema2pojo = { module = "org.jsonschema2pojo:jsonschema2pojo-core", version
 okhttp = "com.squareup.okhttp3:okhttp:4.12.0"
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 gsonfire = "io.gsonfire:gson-fire:1.9.0"
+expressly = "org.glassfish.expressly:expressly:5.0.0"
