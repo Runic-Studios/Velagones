@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.hibernate)
     implementation(libs.jakarta.validation)
     implementation(libs.jakarta.el)
+    implementation(libs.el.impl)
 
     // PaperMC
     compileOnly(libs.paper.api)
