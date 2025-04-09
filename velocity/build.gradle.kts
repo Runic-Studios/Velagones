@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.javax.validation)
     implementation(libs.jakarta.el)
     implementation(libs.el.impl)
+    implementation(libs.expressly)
 
     // Velocity
     kapt(libs.velocity.api)

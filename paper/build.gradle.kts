@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.jakarta.validation)
     implementation(libs.jakarta.el)
     implementation(libs.el.impl)
+    implementation(libs.expressly)
 
     // PaperMC
     compileOnly(libs.paper.api)
