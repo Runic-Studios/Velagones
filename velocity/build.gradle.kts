@@ -82,6 +82,8 @@ tasks.withType(KaptGenerateStubsTask::class.java).configureEach {
 tasks.shadowJar {
     archiveBaseName.set("velagones-velocity")
     mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
+    relocate("com.google.protobuf", "shadow.com.google.protobuf")
+    relocate("com.fasterxml.jackson", "shadow.com.fasterxml.jackson")
 }
 
 jsonSchema2Pojo {
