@@ -57,13 +57,21 @@ constructor(
         discovered = true
         serverName = request.serverName
         logger.info("Velocity proxy has requested to discover us, naming us $serverName")
-        Bukkit.getPluginManager().callEvent(VelagonesDiscoverEvent(request.serverName))
+        try {
+            Bukkit.getPluginManager().callEvent(VelagonesDiscoverEvent(request.serverName))
+        } catch (exception: Exception) {
+            logger.error("Failed to broadcast VelagonesDiscoverEvent", exception)
+        }
         return DiscoverResponse.newBuilder().setSuccess(true).build()
     }
 
     override suspend fun deactivate(request: DeactivateRequest): DeactivateResponse {
         deactivated = true
-        Bukkit.getPluginManager().callEvent(VelagonesDeactivateEvent(request.immediate))
+        try {
+            Bukkit.getPluginManager().callEvent(VelagonesDeactivateEvent(request.immediate))
+        } catch (exception: Exception) {
+            logger.error("Failed to broadcast VelagonesDeactivateEvent", exception)
+        }
         if (request.immediate) {
             logger.info("Velocity proxy has request we deactivate IMMEDIATELY")
             logger.info("Kicking all players and marking us as shutdown in Agones")

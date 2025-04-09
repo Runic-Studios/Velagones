@@ -12,7 +12,9 @@ import org.bukkit.event.HandlerList
 data class VelagonesDiscoverEvent(val name: String) : Event() {
 
     companion object {
-        val HANDLERS: HandlerList = HandlerList()
+        private val HANDLERS: HandlerList = HandlerList()
+
+        @JvmStatic fun getHandlerList() = HANDLERS
     }
 
     override fun getHandlers() = HANDLERS

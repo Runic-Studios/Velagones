@@ -11,7 +11,9 @@ import org.bukkit.event.HandlerList
 data class VelagonesDeactivateEvent(val immediate: Boolean) : Event() {
 
     companion object {
-        val HANDLERS: HandlerList = HandlerList()
+        private val HANDLERS: HandlerList = HandlerList()
+
+        @JvmStatic fun getHandlerList() = HANDLERS
     }
 
     override fun getHandlers() = HANDLERS
