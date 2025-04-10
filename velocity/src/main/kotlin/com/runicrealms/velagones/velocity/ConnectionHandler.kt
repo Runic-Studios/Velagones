@@ -1,7 +1,6 @@
 package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
-import com.runicrealms.velagones.velocity.api.selector.ServerSelector
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent
 import com.velocitypowered.api.proxy.ProxyServer
@@ -14,8 +13,7 @@ constructor(
     plugin: VelagonesPlugin,
     proxy: ProxyServer,
     private val logger: Logger,
-    private val fleetRegistry: VelagonesFleetRegistry,
-    private val serverSelector: ServerSelector,
+    private val registry: VelagonesRegistry,
 ) {
 
     init {
@@ -24,9 +22,9 @@ constructor(
 
     @Subscribe
     fun onServerPreConnect(event: PlayerChooseInitialServerEvent) {
-        val servers = fleetRegistry.fleets.values.map { it.registry.connected.values }.flatten()
+        val servers = registry.fleets.values.map { it.registry.connected.values }.flatten()
 
-        val selectionResponse = serverSelector.selectServer(event.player, servers)
+        val selectionResponse = registry.serverSelector.selectServer(event.player, servers)
 
         if (selectionResponse.server == null) {
             logger.info(

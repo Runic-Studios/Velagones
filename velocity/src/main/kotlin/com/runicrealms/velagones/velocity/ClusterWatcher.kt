@@ -17,7 +17,7 @@ constructor(
     proxy: ProxyServer,
     private val logger: Logger,
     plugin: VelagonesPlugin,
-    private val fleetRegistry: VelagonesFleetRegistry,
+    private val registry: VelagonesRegistry,
 ) {
 
     init {
@@ -108,7 +108,7 @@ constructor(
         val labels = gameServer.metadata.labels ?: return
 
         val fleetLabel = labels["agones.dev/fleet"] ?: return
-        val fleet = fleetRegistry.fleets[fleetLabel] ?: return
+        val fleet = registry.fleets[fleetLabel] ?: return
 
         val target = fleet.registry.connected[name]
         if (

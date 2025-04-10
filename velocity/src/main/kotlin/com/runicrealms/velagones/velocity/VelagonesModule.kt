@@ -7,10 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.google.inject.AbstractModule
-import com.runicrealms.velagones.velocity.api.selector.DistributedServerSelector
-import com.runicrealms.velagones.velocity.api.selector.PackedServerSelector
-import com.runicrealms.velagones.velocity.api.selector.ServerSelector
-import com.runicrealms.velagones.velocity.config.*
+import com.runicrealms.velagones.velocity.api.event.VelagonesInitializeEvent
+import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import jakarta.validation.Validation
@@ -23,31 +21,17 @@ class VelagonesModule(
     private val proxy: ProxyServer,
     private val logger: Logger,
     private val dataDirectory: Path,
+    private val initializeEvent: VelagonesInitializeEvent,
 ) : AbstractModule() {
 
     override fun configure() {
-        // Bind Velocity
         bind(VelagonesPlugin::class.java).toInstance(plugin)
         bind(ProxyServer::class.java).toInstance(proxy)
         bind(Logger::class.java).toInstance(logger)
         bind(Path::class.java).annotatedWith(DataDirectory::class.java).toInstance(dataDirectory)
-
-        // Load and bind config
-        val config = loadConfig()
-        bind(VelagonesConfig::class.java).toInstance(config)
-
-        // Bind Default API implementations
-        when (config.selector.type!!) {
-            SelectorConfig.Type.DISTRIBUTED ->
-                bind(ServerSelector::class.java).to(DistributedServerSelector::class.java)
-            SelectorConfig.Type.PACKED ->
-                bind(ServerSelector::class.java).to(PackedServerSelector::class.java)
-            SelectorConfig.Type.CUSTOM ->
-                logger.info("Detected \"custom\" selector.type, not injecting any selector.")
-        }
-
-        // Bind Velagones classes
-        bind(VelagonesFleetRegistry::class.java).asEagerSingleton()
+        bind(VelagonesInitializeEvent::class.java).toInstance(initializeEvent)
+        bind(VelagonesConfig::class.java).toInstance(loadConfig())
+        bind(VelagonesRegistry::class.java).asEagerSingleton()
         bind(ClusterWatcher::class.java).asEagerSingleton()
         bind(ConnectionHandler::class.java).asEagerSingleton()
     }

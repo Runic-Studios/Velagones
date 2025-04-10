@@ -1,7 +1,6 @@
 package com.runicrealms.velagones.velocity.api.selector
 
 import com.runicrealms.velagones.velocity.api.VelagonesGameServer
-import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.proxy.Player
 
 /**
@@ -11,11 +10,7 @@ import com.velocitypowered.api.proxy.Player
  * For example, if capacityTarget is set to 0.8 with capacity set to 20, Velagones will attempt to
  * fill up each server with 16 players before moving on to a new one.
  */
-class PackedServerSelector(config: VelagonesConfig) : ServerSelector {
-
-    private val capacityTarget =
-        config.selector.packed?.targetCapacity
-            ?: throw IllegalArgumentException("Missing config: selector.packed.targetCapacity")
+class PackedServerSelector(private val capacityTarget: Double) : ServerSelector {
 
     override fun selectServer(
         player: Player,

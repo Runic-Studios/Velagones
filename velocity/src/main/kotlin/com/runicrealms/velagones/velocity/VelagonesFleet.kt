@@ -5,11 +5,9 @@ import com.runicrealms.velagones.service.DiscoverRequest
 import com.runicrealms.velagones.service.VelagonesPaperGrpcKt
 import com.runicrealms.velagones.velocity.api.VelagonesGameServer
 import com.runicrealms.velagones.velocity.api.autoscaler.Autoscaler
-import com.runicrealms.velagones.velocity.api.autoscaler.DefaultAutoscaler
 import com.runicrealms.velagones.velocity.api.event.server.VelagonesDeactivateServerEvent
 import com.runicrealms.velagones.velocity.api.event.server.VelagonesDiscoverServerEvent
 import com.runicrealms.velagones.velocity.api.event.server.VelagonesRemoveServerEvent
-import com.runicrealms.velagones.velocity.config.AutoscalerConfig
 import com.runicrealms.velagones.velocity.config.FleetConfig
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
@@ -18,7 +16,11 @@ import com.velocitypowered.api.proxy.server.ServerInfo
 import io.grpc.ManagedChannelBuilder
 import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 
 /**
@@ -31,10 +33,11 @@ import org.slf4j.Logger
  */
 class VelagonesFleet(
     private val proxy: ProxyServer,
-    private val plugin: VelagonesPlugin,
+    plugin: VelagonesPlugin,
     private val logger: Logger,
     config: FleetConfig,
     val name: String,
+    val autoscaler: Autoscaler?,
 ) {
 
     init {
@@ -45,30 +48,11 @@ class VelagonesFleet(
 
     val serverCapacity = config.serverCapacity
 
-    val autoscalerEndpoint: AutoscalerEndpoint? = run {
-        val autoscaler: Autoscaler? =
-            when (config.autoscaler.type!!) {
-                AutoscalerConfig.Type.DEFAULT ->
-                    DefaultAutoscaler(
-                        config.autoscaler.default,
-                        serverCapacity,
-                        config.autoscaler.minServers
-                            ?: throw IllegalArgumentException(
-                                "Missing config: autoscaler.minServers"
-                            ),
-                    )
-                AutoscalerConfig.Type.DISABLED -> null
-            }
-        autoscaler ?: return@run null
-        return@run AutoscalerEndpoint(
-            proxy,
-            plugin,
-            logger,
-            autoscaler,
-            config.autoscaler,
-            registry,
-        )
-    }
+    val autoscalerEndpoint: AutoscalerEndpoint? =
+        if (autoscaler == null) null
+        else {
+            AutoscalerEndpoint(proxy, plugin, logger, autoscaler, config.autoscaler, registry)
+        }
 
     @Subscribe
     fun onProxyShutdown(event: ProxyShutdownEvent) {

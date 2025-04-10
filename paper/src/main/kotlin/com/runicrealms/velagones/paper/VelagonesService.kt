@@ -3,7 +3,11 @@ package com.runicrealms.velagones.paper
 import com.google.inject.Inject
 import com.runicrealms.velagones.paper.api.event.VelagonesDeactivateEvent
 import com.runicrealms.velagones.paper.api.event.VelagonesDiscoverEvent
-import com.runicrealms.velagones.service.*
+import com.runicrealms.velagones.service.DeactivateRequest
+import com.runicrealms.velagones.service.DeactivateResponse
+import com.runicrealms.velagones.service.DiscoverRequest
+import com.runicrealms.velagones.service.DiscoverResponse
+import com.runicrealms.velagones.service.VelagonesPaperGrpcKt
 import io.grpc.ServerBuilder
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
