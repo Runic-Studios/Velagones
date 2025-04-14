@@ -3,7 +3,7 @@
 pipeline {
     agent {
         kubernetes {
-            yaml jenkinsAgent("registry.runicrealms.com")
+            yaml jenkinsAgent(["agent-java-21": "registry.runicrealms.com/jenkins/agent-java-21:latest"])
         }
     }
 
@@ -40,7 +40,7 @@ pipeline {
         }
         stage('Build and Push Artifacts') {
             steps {
-                container('jenkins-agent') {
+                container('agent-java-21') {
                     script {
                         sh """
                         ./gradlew :velocity:shadowJar :paper:shadowJar --no-daemon
@@ -53,7 +53,7 @@ pipeline {
         }
         stage('Update Realm-Velocity and Realm-Paper Manifests') {
             steps {
-                container('jenkins-agent') {
+                container('agent-java-21') {
                     updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
                     updateManifest('dev', 'Realm-Paper', 'plugin-manifest.yaml', env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
                 }
@@ -64,7 +64,7 @@ pipeline {
                 expression { return env.RUN_MAIN_DEPLOY == 'true' }
             }
             steps {
-                container('jenkins-agent') {
+                container('agent-java-21') {
                     createPR('Velagones', 'Realm-Velocity', 'dev', 'main')
                     createPR('Velagones', 'Realm-Paper', 'dev', 'main')
                 }
