@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 class VelagonesPlugin : JavaPlugin() {
 
-    private val logger = LoggerFactory.getLogger("velagones")
+    private val logger = LoggerFactory.getLogger("Velagones")
 
     private lateinit var injector: Injector
 

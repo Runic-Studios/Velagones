@@ -47,7 +47,6 @@ constructor(
         } catch (exception: Exception) {
             logger.error("Failed to start Velagones Paper gRPC server on port $port")
             logger.info("Shutting down since we failed to start Velagones Paper gRPC server")
-            agonesHook.agones.shutdown()
             Bukkit.shutdown()
             throw exception
         }
@@ -82,7 +81,7 @@ constructor(
             Bukkit.getOnlinePlayers().forEach {
                 it.kick(Component.text("Proxy has requested immediate deactivation of server"))
             }
-            agonesHook.agones.shutdown()
+            Bukkit.shutdown()
         } else {
             logger.info("Velocity proxy has requested that we deactivate once all players leave")
         }
@@ -91,19 +90,20 @@ constructor(
 
     @EventHandler
     fun onPlayerQuit(event: PlayerQuitEvent) {
-        Bukkit.getScheduler()
-            .runTaskLater(
-                plugin,
-                Runnable {
-                    if (Bukkit.getOnlinePlayers().isEmpty()) {
-                        logger.info(
-                            "Last player has left, marking us as shutdown in Agones since we are deactivated"
-                        )
-                        agonesHook.agones.shutdown()
-                        Bukkit.shutdown()
-                    }
-                },
-                1L,
-            )
+        if (deactivated) {
+            Bukkit.getScheduler()
+                .runTaskLater(
+                    plugin,
+                    Runnable {
+                        if (Bukkit.getOnlinePlayers().isEmpty()) {
+                            logger.info(
+                                "Last player has left, since we are deactivated, shutting down server"
+                            )
+                            Bukkit.shutdown()
+                        }
+                    },
+                    1L,
+                )
+        }
     }
 }

@@ -14,20 +14,13 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.slf4j.Logger
 
-class AgonesHook @Inject constructor(plugin: VelagonesPlugin, private val logger: Logger) :
-    Listener {
+class AgonesHook @Inject constructor(private val logger: Logger) {
 
     private val port =
         System.getenv("AGONES_SDK_GRPC_PORT")?.toIntOrNull()
             ?: throw IllegalArgumentException(
                 "AGONES_SDK_GRPC_PORT environment variable is undefined, ensure we are running on an Agones GameServer"
             )
-
-    init {
-        Bukkit.getPluginManager().registerEvents(this, plugin)
-    }
-
-    private val allocated = false
 
     private val gameServerWatcherExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val healthCheckExecutor: ScheduledExecutorService =
@@ -60,15 +53,5 @@ class AgonesHook @Inject constructor(plugin: VelagonesPlugin, private val logger
             logger.warn("Failed to add game server watcher: Not allowed")
         }
         agones.ready()
-    }
-
-    @EventHandler
-    fun onPlayerJoin(event: PlayerJoinEvent) {
-        if (!allocated) agones.allocate()
-    }
-
-    @EventHandler
-    fun onPlayerQuit(event: PlayerQuitEvent) {
-        if (allocated) agones.shutdown()
     }
 }

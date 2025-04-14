@@ -21,7 +21,7 @@ import java.io.Closeable
 data class VelagonesGameServer(
     val registeredServer: RegisteredServer,
     private val grpcChannel: ManagedChannel,
-    val grpcStub: VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub,
+    internal val grpcStub: VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub,
     val fleet: String,
     val capacity: Int,
 ) : Closeable {
