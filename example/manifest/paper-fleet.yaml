@@ -1,0 +1,30 @@
+apiVersion: agones.dev/v1
+kind: Fleet
+metadata:
+  name: my-game-fleet
+  namespace: game
+spec:
+  replicas: 1
+  template:
+    spec:
+      health:
+        initialDelaySeconds: 120
+      ports:
+        - name: game
+          containerPort: 25565
+          protocol: TCP
+          container: game-container
+          portPolicy: Dynamic
+        - name: grpc
+          containerPort: 50051
+          protocol: TCP
+          container: game-container
+          portPolicy: None
+      template:
+        spec:
+          containers:
+            - name: game-container
+              image: my-paper-image:latest  # Replace with your paper image
+              env:
+                - name: VELAGONES_GRPC_PORT
+                  value: "50051"

@@ -3,12 +3,13 @@
 pipeline {
     agent {
         kubernetes {
-            yaml jenkinsAgent("registry.runicrealms.com")
+            yaml jenkinsAgent(["agent-java-21": "registry.runicrealms.com/jenkins/agent-java-21:latest"])
         }
     }
 
     environment {
-        ARTIFACT_NAME = 'velagones'
+        ARTIFACT_VELOCITY_NAME = 'velagones-velocity'
+        ARTIFACT_PAPER_NAME = 'velagones-paper'
         PROJECT_NAME = 'Velagones'
         REGISTRY = 'registry.runicrealms.com'
         REGISTRY_PROJECT = 'library'
@@ -37,34 +38,35 @@ pipeline {
                 }
             }
         }
-        stage('Build and Push Artifact') {
+        stage('Build and Push Artifacts') {
             steps {
-                container('jenkins-agent') {
+                container('agent-java-21') {
                     script {
                         sh """
-                        gradle crd2java
-                        gradle shadowJar
+                        ./gradlew :velocity:shadowJar :paper:shadowJar --no-daemon
                         """
-                        def jarPath = sh(script: "ls build/libs/velagones-*-all.jar | head -n 1", returnStdout: true).trim()
-                        orasPush(env.ARTIFACT_NAME, env.GIT_COMMIT.take(7), jarPath, env.REGISTRY, env.REGISTRY_PROJECT)
+                        orasPush(env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), "velocity/build/libs/velagones-velocity-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
+                        orasPush(env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), "paper/build/libs/velagones-paper-all.jar", env.REGISTRY, env.REGISTRY_PROJECT)
                     }
                 }
             }
         }
-        stage('Update Realm-Velocity Manifest') {
+        stage('Update Realm-Velocity and Realm-Paper Manifests') {
             steps {
-                container('jenkins-agent') {
-                    updateManifest('dev', 'Realm-Velocity', 'plugin-manifest.yaml', env.ARTIFACT_NAME, env.GIT_COMMIT.take(7), env.REGISTRY, env.REGISTRY_PROJECT)
+                container('agent-java-21') {
+                    updateManifest('dev', 'Realm-Velocity', 'artifact-manifest.yaml', env.ARTIFACT_VELOCITY_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
+                    updateManifest('dev', 'Realm-Paper', 'artifact-manifest.yaml', env.ARTIFACT_PAPER_NAME, env.GIT_COMMIT.take(7), 'artifacts.velagones.tag')
                 }
             }
         }
-        stage('Create PR to Promote Realm-Velocity Dev to Main (Prod Only)') {
+        stage('Create PRs to Promote Realm-Velocity and Realm-Paper Dev to Main (Prod Only)') {
             when {
                 expression { return env.RUN_MAIN_DEPLOY == 'true' }
             }
             steps {
-                container('jenkins-agent') {
+                container('agent-java-21') {
                     createPR('Velagones', 'Realm-Velocity', 'dev', 'main')
+                    createPR('Velagones', 'Realm-Paper', 'dev', 'main')
                 }
             }
         }

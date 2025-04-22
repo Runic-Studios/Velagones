@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: velocity-service
+  namespace: game
+spec:
+  type: ClusterIP  # This is because we have a traefik ingress route
+  selector:
+    app: velocity
+  ports:
+    - name: minecraft
+      protocol: TCP
+      port: 25565
+      targetPort: 25565
+    - name: autoscale
+      protocol: TCP
+      port: 7070
+      targetPort: 7070
+    # Note: You  may need to add multiple autoscaler ports if you have multiple fleets

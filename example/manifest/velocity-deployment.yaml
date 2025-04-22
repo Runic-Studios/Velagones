@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velocity
+  namespace: game
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: velocity
+  template:
+    metadata:
+      labels:
+        app: velocity
+    spec:
+      serviceAccountName: velocity-sa
+      containers:
+        - name: velocity
+          image: my-velocity-image:latest  # Replace with your image
+          ports:
+            - name: minecraft
+              containerPort: 25565
+            - name: autoscale
+              containerPort: 7070  # Ensure this matches the Velocity Velagones config.yml autoscaler port
+            # Note: You  may need to add multiple autoscaler ports if you have multiple fleets

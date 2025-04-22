@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Velagones",
+  "type": "object",
+  "$defs": {
+    "autoscaler": {
+      "type": "object",
+      "properties": {
+        "hostPort": { "type": "integer" },
+        "minServers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["disabled", "default", "custom"]
+        },
+        "custom": { "type": "string" },
+        "default": {
+          "title": "DefaultAutoscaler",
+          "type": "object",
+          "properties": {
+            "capacityFactor": {
+              "type": "number",
+              "minimum": 1.1,
+              "maximum": 2.0
+            },
+            "up": {
+              "title": "DefaultAutoscalerUp",
+              "type": "object",
+              "properties": {
+                "minPlayersBefore": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "minSecondsBefore": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": ["minPlayersBefore", "minSecondsBefore"]
+            },
+            "down": {
+              "title": "DefaultAutoscalerDown",
+              "type": "object",
+              "properties": {
+                "minSecondsBefore": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "hysteresis": {
+                  "type": "number",
+                  "minimum": 1.0,
+                  "maximum": 1.5
+                }
+              },
+              "required": ["minSecondsBefore", "hysteresis"]
+            }
+          },
+          "required": ["capacityFactor", "up", "down"]
+        }
+      },
+      "required": ["type"]
+    }
+  },
+  "properties": {
+    "selector": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["distributed", "packed", "custom"]
+        },
+        "packed": {
+          "title": "PackedSelector",
+          "type": "object",
+          "properties": {
+            "targetCapacity": {
+              "type": "number"
+            }
+          },
+          "required": ["targetCapacity"]
+        }
+      },
+      "required": ["type"]
+    },
+    "fleets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "autoscaler": {
+            "$ref": "#/$defs/autoscaler"
+          },
+          "serverCapacity": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": ["name", "autoscaler", "serverCapacity"]
+      }
+    }
+  },
+  "required": ["selector", "fleets"]
+}
