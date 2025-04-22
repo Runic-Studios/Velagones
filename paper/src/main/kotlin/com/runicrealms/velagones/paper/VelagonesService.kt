@@ -78,12 +78,20 @@ constructor(
         if (request.immediate) {
             logger.info("Velocity proxy has request we deactivate IMMEDIATELY")
             logger.info("Kicking all players and marking us as shutdown in Agones")
-            Bukkit.getOnlinePlayers().forEach {
-                it.kick(Component.text("Proxy has requested immediate deactivation of server"))
-            }
-            Bukkit.shutdown()
+            Bukkit.getScheduler().runTask(plugin, Runnable {
+                Bukkit.getOnlinePlayers().forEach {
+                    it.kick(Component.text("Proxy has requested immediate deactivation of server"))
+                }
+                Bukkit.shutdown()
+            })
         } else {
             logger.info("Velocity proxy has requested that we deactivate once all players leave")
+            if (Bukkit.getOnlinePlayers().isEmpty()) {
+                logger.info("Shutting down since there are no players online")
+                Bukkit.getScheduler().runTask(plugin, Runnable {
+                    Bukkit.shutdown()
+                })
+            }
         }
         return DeactivateResponse.newBuilder().build()
     }
