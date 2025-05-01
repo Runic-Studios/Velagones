@@ -27,7 +27,8 @@ velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "vel
 fabric8-kubernetes-client = "io.fabric8:kubernetes-client:7.1.0"
 fabric8-generator-annotations = "io.fabric8:generator-annotations:7.1.0"
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
-agones4j = "com.runicrealms.agonessdk:agones4j:1.0.2"
+#agones4j = "com.runicrealms.agonessdk:agones4j:1.0.2"
+agones4j = "net.infumia:agones4j:2.0.2"
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 grpc-netty = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }

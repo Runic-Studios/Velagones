@@ -59,6 +59,16 @@ pipeline {
                 }
             }
         }
+        stage('Publish to Maven Nexus (Prod Only)') {
+            when {
+                expression { return env.RUN_MAIN_DEPLOY == 'true' }
+            }
+            steps {
+                container('agent-java-21') {
+                    nexusPublish()
+                }
+            }
+        }
         stage('Create PRs to Promote Realm-Velocity and Realm-Paper Dev to Main (Prod Only)') {
             when {
                 expression { return env.RUN_MAIN_DEPLOY == 'true' }

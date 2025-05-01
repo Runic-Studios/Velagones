@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.protobuf)
+    `maven-publish`
 }
 
 repositories {
@@ -49,4 +50,27 @@ tasks.shadowJar {
     mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
     relocate("com.google.protobuf", "shadow.com.google.protobuf")
     relocate("com.fasterxml.jackson", "shadow.com.fasterxml.jackson")
+}
+
+val archiveName = "velagones-paper"
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = project.group.toString()
+            artifactId = archiveName
+            version = project.version.toString()
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus"
+            url = uri("https://nexus.runicrealms.com/repository/maven-snapshots/")
+            credentials {
+                username = System.getenv("NEXUS_USERNAME")
+                password = System.getenv("NEXUS_PASSWORD")
+            }
+        }
+    }
 }

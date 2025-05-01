@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.openapi)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.jsonschema2pojo)
+    `maven-publish`
 }
 
 repositories {
@@ -96,4 +97,27 @@ jsonSchema2Pojo {
     initializeCollections = true
     classNameSuffix = "Config"
     includeJsr303Annotations = true
+}
+
+val archiveName = "velagones-velocity"
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = project.group.toString()
+            artifactId = archiveName
+            version = project.version.toString()
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus"
+            url = uri("https://nexus.runicrealms.com/repository/maven-releases/")
+            credentials {
+                username = System.getenv("NEXUS_USERNAME")
+                password = System.getenv("NEXUS_PASSWORD")
+            }
+        }
+    }
 }
