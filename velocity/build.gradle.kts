@@ -105,9 +105,10 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            groupId = project.group.toString()
+            groupId = project.parent!!.group.toString()
             artifactId = archiveName
-            version = project.version.toString()
+            version = project.parent!!.version.toString()
+            println("VERSION: $version")
         }
     }
     repositories {
