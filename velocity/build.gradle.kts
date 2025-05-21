@@ -108,7 +108,6 @@ publishing {
             groupId = project.parent!!.group.toString()
             artifactId = archiveName
             version = project.parent!!.version.toString()
-            println("VERSION: $version")
         }
     }
     repositories {
