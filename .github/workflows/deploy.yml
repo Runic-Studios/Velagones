@@ -28,6 +28,9 @@ jobs:
         id: env
         uses: Runic-Studios/Realm-Actions/determine-env@main
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
       - name: Build Artifacts
         run: ./gradlew :velocity:shadowJar :paper:shadowJar --no-daemon
 
