@@ -19,7 +19,7 @@ dependencies {
 
 javaGen {
     urls.add(
-        "https://raw.githubusercontent.com/googleforgames/agones/release-1.47.0/install/yaml/install.yaml"
+        "https://raw.githubusercontent.com/googleforgames/agones/release-1.54.0/install/yaml/install.yaml"
     )
 }
 
