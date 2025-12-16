@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.AbstractModule
 import com.runicrealms.velagones.velocity.api.event.VelagonesInitializeEvent
 import com.runicrealms.velagones.velocity.config.VelagonesConfig
@@ -58,7 +59,9 @@ class VelagonesModule(
 
         val merged = mapper.treeToValue(mergedNode, VelagonesConfig::class.java)
 
-        logger.info("Loaded merged config: $merged")
+        val prettyMerged = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(merged)
+
+        logger.info("Loaded merged config: $prettyMerged")
 
         val validator = Validation.buildDefaultValidatorFactory().validator
         val violations = validator.validate(merged)
