@@ -30,6 +30,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: true
+          gradle-home-cache-includes: |
+            caches
+            wrapper
+            notifications
+            jdks
 
       - name: Build Artifacts
         run: ./gradlew :velocity:shadowJar :paper:shadowJar --no-daemon
