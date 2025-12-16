@@ -79,11 +79,11 @@ jobs:
           ssh_key: ${{ secrets.BOT_SSH_KEY }}
           commit_message: 'Update ${{ env.ARTIFACT_PAPER_NAME }} tag to ${{ steps.vars.outputs.sha_short }}'
 
-      - name: Publish to Maven Nexus (Prod Only)
+      - name: Publish to Maven Reposilite (Prod Only)
         if: steps.env.outputs.run_main_deploy == 'true'
         env:
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          REPOSILITE_USERNAME: ${{ secrets.REPOSILITE_USERNAME }}
+          REPOSILITE_PASSWORD: ${{ secrets.REPOSILITE_PASSWORD }}
         run: ./gradlew publish
 
       - name: Create PR Realm-Velocity (Prod Only)
