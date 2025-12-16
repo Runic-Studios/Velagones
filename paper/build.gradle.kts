@@ -7,7 +7,7 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://nexus.runicrealms.com/repository/maven-releases/")
+    maven("https://reposilite.runicrealms.com/releases/")
 }
 
 dependencies {
@@ -65,11 +65,11 @@ publishing {
     }
     repositories {
         maven {
-            name = "nexus"
-            url = uri("https://nexus.runicrealms.com/repository/maven-releases/")
+            name = "reposilite"
+            url = uri("https://reposilite.runicrealms.com/releases/")
             credentials {
-                username = System.getenv("NEXUS_USERNAME")
-                password = System.getenv("NEXUS_PASSWORD")
+                username = System.getenv("REPOSILITE_USERNAME")
+                password = System.getenv("REPOSILITE_PASSWORD")
             }
         }
     }
