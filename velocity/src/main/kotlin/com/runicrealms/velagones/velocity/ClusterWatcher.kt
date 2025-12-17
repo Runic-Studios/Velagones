@@ -36,8 +36,8 @@ constructor(
     }
 
     private fun watch() {
-        logger.info("Starting K8s watch for Agones GameServer updates")
         val client = KubernetesClientBuilder().build()
+        logger.info("Starting K8s watch for Agones GameServer updates in namespace {}", client.namespace)
         client
             .resources(GameServer::class.java)
             .inNamespace(client.namespace)
