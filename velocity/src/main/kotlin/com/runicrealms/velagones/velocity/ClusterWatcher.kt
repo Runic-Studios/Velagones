@@ -1,5 +1,6 @@
 package com.runicrealms.velagones.velocity
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Inject
 import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.proxy.ProxyServer
@@ -76,13 +77,15 @@ constructor(
         )
             return
 
-        val ports = gameServer.spec.ports
-        val portsString =
-            ports
-                .map { "{${it.name}:{hostPort:${it.hostPort},containerPort:${it.containerPort}}" }
-                .joinToString(",")
-        val gamePort = ports.firstOrNull { it.name == "game" }?.hostPort?.toInt()
-        val grpcPort = ports.firstOrNull { it.name == "grpc" }?.containerPort?.toInt()
+        val gamePort =
+            gameServer.status.ports
+                .firstOrNull { it.name == "game" }
+                ?.port // this should be the hostPort
+        val grpcPort =
+            gameServer.status.ports
+                .firstOrNull { it.name == "grpc" }
+                ?.port // this should be the containerPort
+        val portsString = jacksonObjectMapper().writeValueAsString(gameServer.status.ports)
         if (gamePort == null) {
             logger.warn(
                 "Server $name has no port named \"game\" in Agones fleet spec, found instead {$portsString}, make sure you configured it correctly"
@@ -142,8 +145,8 @@ constructor(
             logger.info(
                 "Attempting to discover new Agones GameServer $name on address $nodeAddress:$gamePort with gRPC server $grpcAddress:$grpcPort"
             )
-            val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort))
-            group.registry.discover(info, grpcAddress, grpcPort)
+            val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort.toInt()))
+            group.registry.discover(info, grpcAddress, grpcPort.toInt())
         }
     }
 }
