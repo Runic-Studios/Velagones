@@ -124,6 +124,7 @@ constructor(
         if (group == null) {
             if (config.trackRogues == true) {
                 group = registry.rogues
+                logger.info("Identified rogue game server to collect $name")
             } else {
                 logger.info("Ignoring unknown/rogue game server $name")
                 return
