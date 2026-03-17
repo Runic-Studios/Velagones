@@ -1,8 +1,11 @@
 package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
+import com.runicrealms.velagones.velocity.api.VelagonesAPI
+import com.runicrealms.velagones.velocity.api.VelagonesGameServer
 import com.runicrealms.velagones.velocity.api.autoscaler.DefaultAutoscaler
 import com.runicrealms.velagones.velocity.api.event.VelagonesInitializeEvent
+import com.runicrealms.velagones.velocity.api.event.VelagonesPreInitializeEvent
 import com.runicrealms.velagones.velocity.api.selector.DistributedServerSelector
 import com.runicrealms.velagones.velocity.api.selector.PackedServerSelector
 import com.runicrealms.velagones.velocity.api.selector.ServerSelector
@@ -20,14 +23,17 @@ constructor(
     plugin: VelagonesPlugin,
     logger: Logger,
     config: VelagonesConfig,
-    initializeEvent: VelagonesInitializeEvent,
-) {
+    preInitializeEvent: VelagonesPreInitializeEvent,
+) : VelagonesAPI {
 
     /**
      * Represents all the registered fleets on the Velagones plugin. Maps between their name and the
      * VelagonesFleet instance.
      */
     val fleets = ConcurrentHashMap<String, VelagonesFleet>()
+
+    /** Represents all "rogue" gameservers that are not affiliated with any fleet we know about. */
+    val rogues = VelagonesGroup(proxy, plugin, logger, "velagones-rogues")
 
     var serverSelector: ServerSelector =
         when (config.selector.type!!) {
@@ -40,12 +46,15 @@ constructor(
                         )
                 )
             SelectorConfig.Type.CUSTOM ->
-                initializeEvent.customServerSelector
+                preInitializeEvent.customServerSelector
                     ?: throw IllegalArgumentException(
                         "You selected selector.type: custom, but never registered a custom selector. Make sure to do this during VelagonesInitializeEvent."
                     )
         }
         internal set
+
+    override fun getGameServers(): Collection<VelagonesGameServer> =
+        fleets.values.flatMap { it.registry.connected.values } + rogues.registry.connected.values
 
     init {
         for (fleetConfig in config.fleets) {
@@ -71,7 +80,7 @@ constructor(
                                     ?: throw IllegalArgumentException(
                                         "Missing autoscaler.custom type for fleet $name"
                                     )
-                            initializeEvent.customAutoscalers[customType]
+                            preInitializeEvent.customAutoscalers[customType]
                                 ?: throw IllegalArgumentException(
                                     "Could not find autoscaler.custom type $customType for fleet $name. Make sure you registered this autoscaler during VelagonesInjectEvent."
                                 )
@@ -80,5 +89,8 @@ constructor(
 
             fleets[name] = VelagonesFleet(proxy, plugin, logger, fleetConfig, name, autoscaler)
         }
+
+        // Finished initializing
+        proxy.eventManager.fire(VelagonesInitializeEvent(this)).get()
     }
 }

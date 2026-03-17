@@ -15,14 +15,14 @@ import java.io.Closeable
  * @param registeredServer The RegisteredServer in the Velocity proxy
  * @param grpcChannel The ManagedChannel for communicating to this server over gRPC
  * @param grpcStub The stub we have started
- * @param fleet The name of the Agones Fleet it belongs to
+ * @param group The name of the Agones Fleet/Group it belongs to
  * @param capacity Maximum number of players that can connect to it
  */
 data class VelagonesGameServer(
     val registeredServer: RegisteredServer,
     private val grpcChannel: ManagedChannel,
     internal val grpcStub: VelagonesPaperGrpcKt.VelagonesPaperCoroutineStub,
-    val fleet: String,
+    val group: String,
     val capacity: Int,
 ) : Closeable {
     /**

@@ -6,9 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.AbstractModule
-import com.runicrealms.velagones.velocity.api.event.VelagonesInitializeEvent
+import com.runicrealms.velagones.velocity.api.event.VelagonesPreInitializeEvent
 import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
@@ -22,7 +21,7 @@ class VelagonesModule(
     private val proxy: ProxyServer,
     private val logger: Logger,
     private val dataDirectory: Path,
-    private val initializeEvent: VelagonesInitializeEvent,
+    private val preInitializeEvent: VelagonesPreInitializeEvent,
 ) : AbstractModule() {
 
     override fun configure() {
@@ -30,7 +29,7 @@ class VelagonesModule(
         bind(ProxyServer::class.java).toInstance(proxy)
         bind(Logger::class.java).toInstance(logger)
         bind(Path::class.java).annotatedWith(DataDirectory::class.java).toInstance(dataDirectory)
-        bind(VelagonesInitializeEvent::class.java).toInstance(initializeEvent)
+        bind(VelagonesPreInitializeEvent::class.java).toInstance(preInitializeEvent)
         bind(VelagonesConfig::class.java).toInstance(loadConfig())
         bind(VelagonesRegistry::class.java).asEagerSingleton()
         bind(ClusterWatcher::class.java).asEagerSingleton()
