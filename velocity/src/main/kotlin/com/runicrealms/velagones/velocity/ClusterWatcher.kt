@@ -1,6 +1,7 @@
 package com.runicrealms.velagones.velocity
 
 import com.google.inject.Inject
+import com.runicrealms.velagones.velocity.config.VelagonesConfig
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import dev.agones.v1.GameServer
@@ -18,6 +19,7 @@ constructor(
     private val logger: Logger,
     plugin: VelagonesPlugin,
     private val registry: VelagonesRegistry,
+    private val config: VelagonesConfig,
 ) {
 
     init {
@@ -37,7 +39,10 @@ constructor(
 
     private fun watch() {
         val client = KubernetesClientBuilder().build()
-        logger.info("Starting K8s watch for Agones GameServer updates in namespace {}", client.namespace)
+        logger.info(
+            "Starting K8s watch for Agones GameServer updates in namespace {}",
+            client.namespace,
+        )
         client
             .resources(GameServer::class.java)
             .inNamespace(client.namespace)
@@ -107,17 +112,29 @@ constructor(
 
         val labels = gameServer.metadata.labels ?: return
 
-        val fleetLabel = labels["agones.dev/fleet"] ?: return
-        val fleet = registry.fleets[fleetLabel] ?: return
+        val fleetLabel = labels["agones.dev/fleet"]
+        var group: VelagonesGroup? = null
 
-        val target = fleet.registry.connected[name]
+        if (fleetLabel != null) {
+            group = registry.fleets.getOrDefault(fleetLabel, null)
+        }
+        if (group == null) {
+            if (config.trackRogues == true) {
+                group = registry.rogues
+            } else {
+                logger.info("Ignoring unknown/rogue game server $name")
+                return
+            }
+        }
+
+        val target = group.registry.connected[name]
         if (
             status.state == GameServerStatus.State.SHUTDOWN ||
                 status.state == GameServerStatus.State.UNHEALTHY
         ) {
             target ?: return
             logger.info("Removing game server $name since Agones marked it as shutdown/unhealthy")
-            fleet.registry.remove(target)
+            group.registry.remove(target)
             return
         } else if (status.state == GameServerStatus.State.READY) {
             if (target != null) return
@@ -126,7 +143,7 @@ constructor(
                 "Attempting to discover new Agones GameServer $name on address $nodeAddress:$gamePort with gRPC server $grpcAddress:$grpcPort"
             )
             val info = ServerInfo(name, InetSocketAddress(nodeAddress, gamePort))
-            fleet.registry.discover(info, fleet, grpcAddress, grpcPort)
+            group.registry.discover(info, grpcAddress, grpcPort)
         }
     }
 }

@@ -102,6 +102,9 @@
         },
         "required": ["name", "autoscaler", "serverCapacity"]
       }
+    },
+    "track-rogues": {
+      "type": "boolean"
     }
   },
   "required": ["selector", "fleets"]

@@ -1,2 +1,4 @@
 selector:
   type: distributed
+
+track-rogues: false

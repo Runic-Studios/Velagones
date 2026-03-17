@@ -2,7 +2,7 @@ package com.runicrealms.velagones.velocity
 
 import com.google.inject.Guice
 import com.google.inject.Inject
-import com.runicrealms.velagones.velocity.api.event.VelagonesInitializeEvent
+import com.runicrealms.velagones.velocity.api.event.VelagonesPreInitializeEvent
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
@@ -27,11 +27,11 @@ constructor(
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        // Fire initialize event
-        val initializeEvent = proxy.eventManager.fire(VelagonesInitializeEvent()).get()
+        // Fire pre initialize event
+        val preInitializeEvent = proxy.eventManager.fire(VelagonesPreInitializeEvent()).get()
 
         // Load the module
-        val module = VelagonesModule(this, proxy, logger, dataDirectory, initializeEvent)
+        val module = VelagonesModule(this, proxy, logger, dataDirectory, preInitializeEvent)
 
         // Inject the Guice
         Guice.createInjector(module)

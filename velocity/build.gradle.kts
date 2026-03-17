@@ -115,8 +115,9 @@ publishing {
             name = "reposilite"
             url = uri("https://reposilite.runicrealms.com/releases/")
             credentials {
-                username = System.getenv("REPOSILITE_USERNAME")
-                password = System.getenv("REPOSILITE_PASSWORD")
+                username = "admin" // System.getenv("REPOSILITE_USERNAME")
+                password =
+                    "M3SEeKMXwa+IfsyXoGWH8o/wFPZYwx2dgj5NjMw5bsECEhEfleH0zPpljUtaJfsD" // System.getenv("REPOSILITE_PASSWORD")
             }
         }
     }
