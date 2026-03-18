@@ -4,6 +4,7 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import org.bukkit.plugin.java.JavaPlugin
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class VelagonesPlugin : JavaPlugin() {
 
@@ -28,6 +29,10 @@ class VelagonesPlugin : JavaPlugin() {
         if (service != null) {
             logger.info("Shutting down Velagones Paper gRPC server")
             service.grpcServer.shutdown()
+            if (!service.grpcServer.awaitTermination(10, TimeUnit.SECONDS)) {
+                logger.warn("gRPC server did not terminate in time, forcing shutdown")
+                service.grpcServer.shutdownNow()
+            }
         }
     }
 }

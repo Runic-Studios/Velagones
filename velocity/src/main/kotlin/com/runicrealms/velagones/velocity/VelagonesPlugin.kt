@@ -14,7 +14,7 @@ import org.slf4j.Logger
 @Plugin(
     id = "velagones",
     name = "Velagones",
-    version = "0.1.7",
+    version = "0.1.8",
     description = "The Agones-Velocity Bridge",
 )
 class VelagonesPlugin
