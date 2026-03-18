@@ -2,9 +2,9 @@ package com.runicrealms.velagones.paper
 
 import com.google.inject.Guice
 import com.google.inject.Injector
+import java.util.concurrent.TimeUnit
 import org.bukkit.plugin.java.JavaPlugin
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 class VelagonesPlugin : JavaPlugin() {
 
