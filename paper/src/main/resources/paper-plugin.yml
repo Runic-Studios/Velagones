@@ -2,3 +2,8 @@ name: Velagones
 version: 0.1.8
 main: com.runicrealms.velagones.paper.VelagonesPlugin
 api-version: '1.21.4'
+
+permissions:
+  velagones.command:
+    description: Use /velagones admin subcommands (Agones SDK)
+    default: op

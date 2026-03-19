@@ -7,9 +7,23 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import net.infumia.agones4j.Agones
+import org.bukkit.Bukkit
+import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.server.ServerLoadEvent
+import org.bukkit.event.server.ServerLoadEvent.LoadType
 import org.slf4j.Logger
 
-class AgonesHook @Inject constructor(private val logger: Logger) {
+class AgonesHook
+@Inject
+constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : Listener {
+
+    init {
+        Bukkit.getPluginManager().registerEvents(this, plugin)
+    }
 
     private val port =
         System.getenv("AGONES_SDK_GRPC_PORT")?.toIntOrNull()
@@ -20,7 +34,7 @@ class AgonesHook @Inject constructor(private val logger: Logger) {
     private val gameServerWatcherExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val healthCheckExecutor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor()
-    val agones: Agones =
+    val agones =
         Agones.builder()
             .withAddress("localhost", port)
             .withChannel(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build())
@@ -47,6 +61,26 @@ class AgonesHook @Inject constructor(private val logger: Logger) {
         } else {
             logger.warn("Failed to add game server watcher: Not allowed")
         }
-        agones.ready()
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onServerLoad(event: ServerLoadEvent) {
+        if (event.type != LoadType.STARTUP) return
+        logger.info("Server finished loading, marking READY in Agones...")
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { agones.ready() })
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    fun onPlayerJoin(event: PlayerJoinEvent) {
+        if (Bukkit.getOnlinePlayers().size > 1) return
+        logger.info("First player joined, marking ALLOCATED in Agones...")
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { agones.allocate() })
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerQuit(event: PlayerQuitEvent) {
+        if (Bukkit.getOnlinePlayers().size > 1) return
+        logger.info("Last player leaving, marking READY in Agones...")
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { agones.ready() })
     }
 }
