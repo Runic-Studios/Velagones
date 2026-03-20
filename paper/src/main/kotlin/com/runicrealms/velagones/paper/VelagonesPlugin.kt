@@ -34,6 +34,7 @@ class VelagonesPlugin : JavaPlugin() {
                 logger.warn("gRPC server did not terminate in time, forcing shutdown")
                 service.grpcServer.shutdownNow()
             }
+            service.shutdownEventLoopGroups()
         }
     }
 }

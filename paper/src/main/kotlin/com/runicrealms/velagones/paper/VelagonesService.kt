@@ -8,7 +8,10 @@ import com.runicrealms.velagones.service.DeactivateResponse
 import com.runicrealms.velagones.service.DiscoverRequest
 import com.runicrealms.velagones.service.DiscoverResponse
 import com.runicrealms.velagones.service.VelagonesPaperGrpcKt
-import io.grpc.ServerBuilder
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup
+import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel
+import java.util.concurrent.TimeUnit
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -38,9 +41,19 @@ constructor(
                 "VELAGONES_GRPC_PORT environment variable is undefined, ensure you have added it in the fleet spec"
             )
 
+    private val bossEventLoopGroup = NioEventLoopGroup(1)
+    private val workerEventLoopGroup = NioEventLoopGroup(1)
+
     val grpcServer = let {
         try {
-            val grpcServer = ServerBuilder.forPort(port).addService(this).build().start()
+            val grpcServer =
+                NettyServerBuilder.forPort(port)
+                    .bossEventLoopGroup(bossEventLoopGroup)
+                    .workerEventLoopGroup(workerEventLoopGroup)
+                    .channelType(NioServerSocketChannel::class.java)
+                    .addService(this)
+                    .build()
+                    .start()
             logger.info("Velagones Paper gRPC server started on $port")
             return@let grpcServer
         } catch (exception: Exception) {
@@ -49,6 +62,11 @@ constructor(
             Bukkit.shutdown()
             throw exception
         }
+    }
+
+    fun shutdownEventLoopGroups() {
+        bossEventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).await(5, TimeUnit.SECONDS)
+        workerEventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).await(5, TimeUnit.SECONDS)
     }
 
     init {

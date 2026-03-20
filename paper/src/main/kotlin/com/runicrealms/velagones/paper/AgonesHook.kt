@@ -2,7 +2,9 @@ package com.runicrealms.velagones.paper
 
 import com.google.inject.Inject
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup
+import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioSocketChannel
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -36,8 +38,13 @@ constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : L
     private val gameServerWatcherExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val healthCheckExecutor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor()
+    private val channelEventLoopGroup = NioEventLoopGroup(1)
     private val channel: ManagedChannel =
-        ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build()
+        NettyChannelBuilder.forAddress("localhost", port)
+            .usePlaintext()
+            .eventLoopGroup(channelEventLoopGroup)
+            .channelType(NioSocketChannel::class.java)
+            .build()
     val agones =
         Agones.builder()
             .withChannel(channel)
@@ -96,5 +103,9 @@ constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : L
         if (!channel.awaitTermination(5, TimeUnit.SECONDS)) {
             channel.shutdownNow()
         }
+        // Explicitly await the Netty event loop thread's full exit. Without this,
+        // EpollEventLoop.closeAll() can run after Paper closes the plugin JAR, causing
+        // "zip file closed" errors because class loading fails on the closed classloader.
+        channelEventLoopGroup.shutdownGracefully(0, 0, TimeUnit.SECONDS).await(5, TimeUnit.SECONDS)
     }
 }
