@@ -1,11 +1,13 @@
 package com.runicrealms.velagones.paper
 
 import com.google.inject.Inject
+import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import net.infumia.agones4j.Agones
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -34,10 +36,12 @@ constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : L
     private val gameServerWatcherExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val healthCheckExecutor: ScheduledExecutorService =
         Executors.newSingleThreadScheduledExecutor()
+    private val channel: ManagedChannel =
+        ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build()
     val agones =
         Agones.builder()
             .withAddress("localhost", port)
-            .withChannel(ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build())
+            .withChannel(channel)
             .withGameServerWatcherExecutor(gameServerWatcherExecutor)
             .withHealthCheck(
                 Duration.ofSeconds(1L), // Delay
@@ -82,5 +86,16 @@ constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : L
         if (Bukkit.getOnlinePlayers().size > 1) return
         logger.info("Last player leaving, marking READY in Agones...")
         Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { agones.ready() })
+    }
+
+    fun shutdown() {
+        gameServerWatcherExecutor.shutdown()
+        healthCheckExecutor.shutdown()
+        gameServerWatcherExecutor.awaitTermination(5, TimeUnit.SECONDS)
+        healthCheckExecutor.awaitTermination(5, TimeUnit.SECONDS)
+        channel.shutdown()
+        if (!channel.awaitTermination(5, TimeUnit.SECONDS)) {
+            channel.shutdownNow()
+        }
     }
 }

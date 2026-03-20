@@ -24,6 +24,7 @@ class VelagonesPlugin : JavaPlugin() {
         if (agonesHook != null) {
             logger.info("Marking server as SHUTDOWN in Agones")
             agonesHook.agones.shutdown()
+            agonesHook.shutdown()
         }
         val service = injector.getInstance(VelagonesService::class.java)
         if (service != null) {
