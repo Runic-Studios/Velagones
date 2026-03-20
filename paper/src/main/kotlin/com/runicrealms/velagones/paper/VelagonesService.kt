@@ -21,10 +21,8 @@ import org.slf4j.Logger
 
 class VelagonesService
 @Inject
-constructor(
-    private val logger: Logger,
-    private val plugin: VelagonesPlugin,
-) : VelagonesPaperGrpcKt.VelagonesPaperCoroutineImplBase(), Listener {
+constructor(private val logger: Logger, private val plugin: VelagonesPlugin) :
+    VelagonesPaperGrpcKt.VelagonesPaperCoroutineImplBase(), Listener {
 
     var discovered = false
         private set

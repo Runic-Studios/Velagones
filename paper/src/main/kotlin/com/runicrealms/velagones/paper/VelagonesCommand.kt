@@ -63,14 +63,14 @@ constructor(
                                     )
                                     sender.sendMessage(
                                         Component.text(
-                                            "Use /velagones allocate, /velagones ready, or /velagones shutdown to change SDK state.",
+                                            "Use /velagones allocate|ready|shutdown to change Agones SDK state.",
                                             NamedTextColor.DARK_GRAY,
                                         )
                                     )
                                     sender.sendMessage(
                                         Component.text(
                                             "WARNING: Don't run these unless you understand Agones! Wrong transitions can break scheduling and player flow.",
-                                            NamedTextColor.GOLD,
+                                            NamedTextColor.DARK_RED,
                                         )
                                     )
                                 },
