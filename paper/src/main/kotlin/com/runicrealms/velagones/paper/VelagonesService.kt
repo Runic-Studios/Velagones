@@ -20,7 +20,6 @@ class VelagonesService
 @Inject
 constructor(
     private val logger: Logger,
-    private val agonesHook: AgonesHook,
     private val plugin: VelagonesPlugin,
 ) : VelagonesPaperGrpcKt.VelagonesPaperCoroutineImplBase(), Listener {
 

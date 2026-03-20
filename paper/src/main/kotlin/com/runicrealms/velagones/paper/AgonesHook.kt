@@ -40,7 +40,6 @@ constructor(private val logger: Logger, private val plugin: VelagonesPlugin) : L
         ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build()
     val agones =
         Agones.builder()
-            .withAddress("localhost", port)
             .withChannel(channel)
             .withGameServerWatcherExecutor(gameServerWatcherExecutor)
             .withHealthCheck(
