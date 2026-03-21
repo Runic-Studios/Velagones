@@ -8,6 +8,7 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://reposilite.runicrealms.com/releases/")
+    maven("https://repo.aikar.co/content/groups/aikar/")
 }
 
 dependencies {
@@ -24,6 +25,9 @@ dependencies {
 
     // PaperMC
     compileOnly(libs.paper.api)
+
+    // Commands (ACF)
+    implementation(libs.aikar.commands)
 
     // Fabric8 Kubernetes Client
     implementation(libs.fabric8.kubernetes.client)
@@ -50,6 +54,8 @@ tasks.shadowJar {
     mergeServiceFiles() // Necessary because of something to do with gRPC managed channels
     relocate("com.google.protobuf", "shadow.com.google.protobuf")
     relocate("com.fasterxml.jackson", "shadow.com.fasterxml.jackson")
+    relocate("co.aikar.commands", "com.runicrealms.velagones.shaded.aikar.commands")
+    relocate("co.aikar.locales", "com.runicrealms.velagones.shaded.aikar.locales")
 }
 
 val archiveName = "velagones-paper"

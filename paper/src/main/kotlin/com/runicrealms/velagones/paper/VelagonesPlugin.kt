@@ -2,6 +2,7 @@ package com.runicrealms.velagones.paper
 
 import com.google.inject.Guice
 import com.google.inject.Injector
+import java.util.concurrent.TimeUnit
 import org.bukkit.plugin.java.JavaPlugin
 import org.slf4j.LoggerFactory
 
@@ -23,11 +24,17 @@ class VelagonesPlugin : JavaPlugin() {
         if (agonesHook != null) {
             logger.info("Marking server as SHUTDOWN in Agones")
             agonesHook.agones.shutdown()
+            agonesHook.shutdown()
         }
         val service = injector.getInstance(VelagonesService::class.java)
         if (service != null) {
             logger.info("Shutting down Velagones Paper gRPC server")
             service.grpcServer.shutdown()
+            if (!service.grpcServer.awaitTermination(10, TimeUnit.SECONDS)) {
+                logger.warn("gRPC server did not terminate in time, forcing shutdown")
+                service.grpcServer.shutdownNow()
+            }
+            service.shutdownEventLoopGroups()
         }
     }
 }
