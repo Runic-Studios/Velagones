@@ -1,5 +1,5 @@
 name: Velagones
-version: 0.1.8
+version: 0.2.0
 main: com.runicrealms.velagones.paper.VelagonesPlugin
 api-version: '1.21.4'
 
